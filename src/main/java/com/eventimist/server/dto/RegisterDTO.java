@@ -1,6 +1,6 @@
 package com.eventimist.server.dto;
 
-public class UserDTO {
+public class RegisterDTO {
     private String name;
     private String email;
     private String password;
