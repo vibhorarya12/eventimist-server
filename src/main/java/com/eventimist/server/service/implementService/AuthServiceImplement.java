@@ -6,9 +6,12 @@ import com.eventimist.server.entities.UserEntity;
 import com.eventimist.server.repository.UserRepository;
 import com.eventimist.server.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -49,4 +52,18 @@ public class AuthServiceImplement implements AuthService {
         return  user;
 
     }
+    @Override
+    public UserDetails loadByEmail(String email) throws UsernameNotFoundException {
+        // Load user by email from the database
+        Optional<UserEntity> userOptional = userRepository.findByEmail(email);
+
+        if (userOptional.isEmpty()) {
+            throw new UsernameNotFoundException("User not found with email: " + email);
+        }
+
+        UserEntity user = userOptional.get();
+        // Return UserDetails (Spring Security requires this for authentication)
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+    }
+
 }
