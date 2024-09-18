@@ -16,45 +16,44 @@ import java.util.Optional;
 
 @Service
 public class AuthServiceImplement implements AuthService {
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public AuthServiceImplement(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
-    public void registerUser(RegisterDTO registerDTO){
-
+    public void registerUser(RegisterDTO registerDTO) {
         UserEntity user = mapDtoToEntity(registerDTO);
         String encodedPassword = passwordEncoder.encode(registerDTO.getPassword());
         user.setPassword(encodedPassword);
 
-         userRepository.save(user);
+        userRepository.save(user);
     }
-
 
     @Override
-    public  boolean loginUser(LoginDTO loginDTO){
-        Optional<UserEntity>  userOptional = userRepository.findByEmail(loginDTO.getEmail());
-        if(userOptional.isPresent()){
+    public boolean loginUser(LoginDTO loginDTO) {
+        Optional<UserEntity> userOptional = userRepository.findByEmail(loginDTO.getEmail());
+        if (userOptional.isPresent()) {
             UserEntity userEntity = userOptional.get();
-
-            return  passwordEncoder.matches(loginDTO.getPassword(), userEntity.getPassword());
+            return passwordEncoder.matches(loginDTO.getPassword(), userEntity.getPassword());
         }
-        return  false;
+        return false;
     }
 
-    private  UserEntity mapDtoToEntity(RegisterDTO registerDTO){
+    private UserEntity mapDtoToEntity(RegisterDTO registerDTO) {
         UserEntity user = new UserEntity();
-         user.setName( registerDTO.getName());
-         user.setEmail(registerDTO.getEmail());
+        user.setName(registerDTO.getName());
+        user.setEmail(registerDTO.getEmail());
 
-        return  user;
-
+        return user;
     }
+
     @Override
     public UserDetails loadByEmail(String email) throws UsernameNotFoundException {
-        // Load user by email from the database
         Optional<UserEntity> userOptional = userRepository.findByEmail(email);
 
         if (userOptional.isEmpty()) {
@@ -62,8 +61,7 @@ public class AuthServiceImplement implements AuthService {
         }
 
         UserEntity user = userOptional.get();
-        // Return UserDetails (Spring Security requires this for authentication)
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
     }
-
 }
+
