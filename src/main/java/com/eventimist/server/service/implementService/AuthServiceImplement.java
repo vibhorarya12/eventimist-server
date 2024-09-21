@@ -63,5 +63,11 @@ public class AuthServiceImplement implements AuthService {
         UserEntity user = userOptional.get();
         return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
     }
+
+
+    @Override
+    public boolean checkEmailExists(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
 }
 
