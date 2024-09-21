@@ -9,6 +9,7 @@ public interface AuthService {
     boolean loginUser (LoginDTO loginDTO);
 
     UserDetails loadByEmail(String email);
+    boolean checkEmailExists(String email);
 
 
 }
