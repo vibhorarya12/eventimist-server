@@ -2,6 +2,7 @@ package com.eventimist.server.controllers;
 
 
 import com.eventimist.server.dto.LoginDTO;
+import com.eventimist.server.dto.LoginResponseDTO;
 import com.eventimist.server.dto.RegisterDTO;
 import com.eventimist.server.service.AuthService;
 import com.eventimist.server.utils.JwtUtil;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -22,10 +24,15 @@ public class AuthController {
     private JwtUtil jwtUtil;
 
     @PostMapping("register")
-    public ResponseEntity<String>register(@RequestBody RegisterDTO registerDTO){
+    public ResponseEntity<?>register(@RequestBody RegisterDTO registerDTO){
         try {
             authService.registerUser(registerDTO);
-            return  new ResponseEntity<>("User registered sucessfully", HttpStatus.OK);
+            String jwtToken = jwtUtil.generateToken(registerDTO.getEmail());
+            Map<String , Object> response  = new HashMap<>();
+            response.put("token" , jwtToken);
+            response.put("email", registerDTO.getEmail());
+            response.put("name", registerDTO.getName());
+            return  new ResponseEntity<>(response, HttpStatus.OK);
         }
         catch (Exception e){
 
@@ -35,11 +42,13 @@ public class AuthController {
     }
 
     @PostMapping("login")
-    public  ResponseEntity<String>login(@RequestBody LoginDTO loginDTO){
-        boolean isAuthenticated = authService.loginUser(loginDTO);
+    public  ResponseEntity<?>login(@RequestBody LoginDTO loginDTO){
+        LoginResponseDTO response  = authService.loginUser(loginDTO);
+        boolean isAuthenticated = response.isAuthenticated();
         if (isAuthenticated) {
             String jwtToken = jwtUtil.generateToken(loginDTO.getEmail());
-            return new ResponseEntity<>(jwtToken, HttpStatus.OK);
+           response.setToken(jwtToken);
+            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             return new ResponseEntity<>("Invalid email or password", HttpStatus.UNAUTHORIZED);
         }

@@ -1,6 +1,7 @@
 package com.eventimist.server.service.implementService;
 
 import com.eventimist.server.dto.LoginDTO;
+import com.eventimist.server.dto.LoginResponseDTO;
 import com.eventimist.server.dto.RegisterDTO;
 import com.eventimist.server.entities.UserEntity;
 import com.eventimist.server.repository.UserRepository;
@@ -35,13 +36,20 @@ public class AuthServiceImplement implements AuthService {
     }
 
     @Override
-    public boolean loginUser(LoginDTO loginDTO) {
+    public LoginResponseDTO loginUser(LoginDTO loginDTO) {
         Optional<UserEntity> userOptional = userRepository.findByEmail(loginDTO.getEmail());
+        LoginResponseDTO response = new LoginResponseDTO();
+
         if (userOptional.isPresent()) {
             UserEntity userEntity = userOptional.get();
-            return passwordEncoder.matches(loginDTO.getPassword(), userEntity.getPassword());
+
+            response.setName(userEntity.getName());
+            response.setEmail(userEntity.getEmail());
+            response.setAuthenticated(passwordEncoder.matches(loginDTO.getPassword(), userEntity.getPassword()));
+             return response;
         }
-        return false;
+        
+        return response;
     }
 
     private UserEntity mapDtoToEntity(RegisterDTO registerDTO) {
