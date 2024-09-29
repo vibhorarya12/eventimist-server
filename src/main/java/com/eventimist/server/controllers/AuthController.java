@@ -4,6 +4,7 @@ package com.eventimist.server.controllers;
 import com.eventimist.server.dto.LoginDTO;
 import com.eventimist.server.dto.LoginResponseDTO;
 import com.eventimist.server.dto.RegisterDTO;
+import com.eventimist.server.dto.RegisterResponseDTO;
 import com.eventimist.server.service.AuthService;
 import com.eventimist.server.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +28,11 @@ public class AuthController {
     public ResponseEntity<?>register(@RequestBody RegisterDTO registerDTO){
         try {
             authService.registerUser(registerDTO);
+            RegisterResponseDTO response = new RegisterResponseDTO();
             String jwtToken = jwtUtil.generateToken(registerDTO.getEmail());
-            Map<String , Object> response  = new HashMap<>();
-            response.put("token" , jwtToken);
-            response.put("email", registerDTO.getEmail());
-            response.put("name", registerDTO.getName());
+            response.setToken(jwtToken);
+            response.setName(registerDTO.getName());
+            response.setEmail(registerDTO.getEmail());
             return  new ResponseEntity<>(response, HttpStatus.OK);
         }
         catch (Exception e){
