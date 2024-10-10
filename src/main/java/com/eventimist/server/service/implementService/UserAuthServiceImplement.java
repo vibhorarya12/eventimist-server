@@ -1,12 +1,11 @@
 package com.eventimist.server.service.implementService;
 
-import com.eventimist.server.dto.LoginDTO;
-import com.eventimist.server.dto.LoginResponseDTO;
-import com.eventimist.server.dto.RegisterDTO;
+import com.eventimist.server.dto.userDTO.UserLoginDTO;
+import com.eventimist.server.dto.userDTO.UserLoginResponseDTO;
+import com.eventimist.server.dto.userDTO.UserRegisterDTO;
 import com.eventimist.server.entities.UserEntity;
 import com.eventimist.server.repository.UserRepository;
-import com.eventimist.server.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.eventimist.server.service.UserAuthService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,46 +15,46 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
-public class AuthServiceImplement implements AuthService {
+public class UserUserAuthServiceImplement implements UserAuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthServiceImplement(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserUserAuthServiceImplement(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public void registerUser(RegisterDTO registerDTO) {
-        UserEntity user = mapDtoToEntity(registerDTO);
-        String encodedPassword = passwordEncoder.encode(registerDTO.getPassword());
+    public void registerUser(UserRegisterDTO userRegisterDTO) {
+        UserEntity user = mapDtoToEntity(userRegisterDTO);
+        String encodedPassword = passwordEncoder.encode(userRegisterDTO.getPassword());
         user.setPassword(encodedPassword);
 
         userRepository.save(user);
     }
 
     @Override
-    public LoginResponseDTO loginUser(LoginDTO loginDTO) {
-        Optional<UserEntity> userOptional = userRepository.findByEmail(loginDTO.getEmail());
-        LoginResponseDTO response = new LoginResponseDTO();
+    public UserLoginResponseDTO loginUser(UserLoginDTO userLoginDTO) {
+        Optional<UserEntity> userOptional = userRepository.findByEmail(userLoginDTO.getEmail());
+        UserLoginResponseDTO response = new UserLoginResponseDTO();
 
         if (userOptional.isPresent()) {
             UserEntity userEntity = userOptional.get();
 
             response.setName(userEntity.getName());
             response.setEmail(userEntity.getEmail());
-            response.setAuthenticated(passwordEncoder.matches(loginDTO.getPassword(), userEntity.getPassword()));
+            response.setAuthenticated(passwordEncoder.matches(userLoginDTO.getPassword(), userEntity.getPassword()));
              return response;
         }
         
         return response;
     }
 
-    private UserEntity mapDtoToEntity(RegisterDTO registerDTO) {
+    private UserEntity mapDtoToEntity(UserRegisterDTO userRegisterDTO) {
         UserEntity user = new UserEntity();
-        user.setName(registerDTO.getName());
-        user.setEmail(registerDTO.getEmail());
+        user.setName(userRegisterDTO.getName());
+        user.setEmail(userRegisterDTO.getEmail());
 
         return user;
     }

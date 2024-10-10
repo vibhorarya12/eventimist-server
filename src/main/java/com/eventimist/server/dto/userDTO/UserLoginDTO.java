@@ -1,19 +1,10 @@
-package com.eventimist.server.dto;
+package com.eventimist.server.dto.userDTO;
 
-public class RegisterDTO {
-    private String name;
+public class UserLoginDTO {
     private String email;
     private String password;
 
     // Getters and Setters
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getEmail() {
         return email;
     }

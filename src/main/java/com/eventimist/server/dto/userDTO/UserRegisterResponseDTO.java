@@ -1,6 +1,6 @@
-package com.eventimist.server.dto;
+package com.eventimist.server.dto.userDTO;
 
-public class RegisterResponseDTO {
+public class UserRegisterResponseDTO {
     private String name ;
     private  String email ;
     private  String token ;
