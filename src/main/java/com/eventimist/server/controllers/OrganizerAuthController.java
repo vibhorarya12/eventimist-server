@@ -1,6 +1,8 @@
 package com.eventimist.server.controllers;
 
 
+import com.eventimist.server.dto.organizerDTO.OrganizerLoginDTO;
+import com.eventimist.server.dto.organizerDTO.OrganizerLoginResponseDTO;
 import com.eventimist.server.dto.organizerDTO.OrganizerRegisterDTO;
 import com.eventimist.server.dto.organizerDTO.OrganizerRegisterResponseDTO;
 import com.eventimist.server.service.OrganizerAuthService;
@@ -19,27 +21,28 @@ public class OrganizerAuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @GetMapping("login")
-    public ResponseEntity<?>login(){
-        String Jwt = jwtUtil.generateToken("this@gmail.com");
-        return new ResponseEntity<>("you are logged in " + Jwt,HttpStatus.OK);
+    @PostMapping("login")
+    public ResponseEntity<?>login(@RequestBody OrganizerLoginDTO organizerLoginDTO) {
+        try{
+          OrganizerLoginResponseDTO organizerLoginResponseDTO = organizerAuthService.organizerLogin(organizerLoginDTO);
+          return  new ResponseEntity<>(organizerLoginResponseDTO , HttpStatus.OK);
+
+
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     @PostMapping("register")
     public ResponseEntity<?> register(@RequestBody OrganizerRegisterDTO organizerRegisterDTO){
         try{
-            organizerAuthService.registerOrganizer(organizerRegisterDTO);
-            String Jwt = jwtUtil.generateToken(organizerRegisterDTO.getEmail());
-            OrganizerRegisterResponseDTO response = new OrganizerRegisterResponseDTO();
-            response.setToken(Jwt);
-            response.setEmail(organizerRegisterDTO.getEmail());
-            response.setName(organizerRegisterDTO.getName());
-            response.setBio(organizerRegisterDTO.getBio());
-            response.setProfilePic(organizerRegisterDTO.getProfilePic());
-            return  new ResponseEntity<>(response, HttpStatus.OK);
+         OrganizerRegisterResponseDTO organizerRegisterResponseDTO  = organizerAuthService.registerOrganizer(organizerRegisterDTO);
+
+           return  new ResponseEntity<>(organizerRegisterResponseDTO, HttpStatus.OK);
         }
         catch (Exception e){
-            return new ResponseEntity<>("Error creating organizer", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 
         }
     }
