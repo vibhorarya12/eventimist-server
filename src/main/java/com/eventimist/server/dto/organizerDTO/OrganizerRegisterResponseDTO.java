@@ -1,18 +1,22 @@
 package com.eventimist.server.dto.organizerDTO;
 
 public class OrganizerRegisterResponseDTO {
-    private String name;
+    private String name = "";
 
 
-    private String email;
+    private String email = "";
 
-    private String bio;
+    private String bio = "";
 
+
+    private String profilePic = "";
+
+    private String token = "";
     public void setToken(String token) {
         this.token = token;
     }
 
-    private String token;
+
     public void setName(String name) {
         this.name = name;
     }
@@ -29,9 +33,23 @@ public class OrganizerRegisterResponseDTO {
         this.profilePic = profilePic;
     }
 
-    private String profilePic;
+    public String getName() {
+        return name;
+    }
 
+    public String getEmail() {
+        return email;
+    }
 
+    public String getBio() {
+        return bio;
+    }
 
+    public String getProfilePic() {
+        return profilePic;
+    }
 
+    public String getToken() {
+        return token;
+    }
 }
