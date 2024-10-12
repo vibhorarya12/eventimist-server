@@ -18,12 +18,19 @@ public class OrganizerAuthController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @GetMapping("login")
+    public ResponseEntity<?>login(){
+        String Jwt = jwtUtil.generateToken("this@gmail.com");
+        return new ResponseEntity<>("you are logged in " + Jwt,HttpStatus.OK);
+    }
+
     @PostMapping("register")
-   public ResponseEntity<?> register(@RequestBody OrganizerRegisterDTO organizerRegisterDTO){
+    public ResponseEntity<?> register(@RequestBody OrganizerRegisterDTO organizerRegisterDTO){
         try{
             organizerAuthService.registerOrganizer(organizerRegisterDTO);
-            OrganizerRegisterResponseDTO response = new OrganizerRegisterResponseDTO();
             String Jwt = jwtUtil.generateToken(organizerRegisterDTO.getEmail());
+            OrganizerRegisterResponseDTO response = new OrganizerRegisterResponseDTO();
             response.setToken(Jwt);
             response.setEmail(organizerRegisterDTO.getEmail());
             response.setName(organizerRegisterDTO.getName());
