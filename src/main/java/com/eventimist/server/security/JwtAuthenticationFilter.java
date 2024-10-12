@@ -1,12 +1,12 @@
 package com.eventimist.server.security;
 
-import com.eventimist.server.service.AuthService;
+import com.eventimist.server.service.OrganizerAuthService;
+import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,11 +19,13 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
-    private final AuthService authService;
+    private final UserAuthService userAuthService;
+    private final OrganizerAuthService organizerAuthService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil, AuthService authService) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, UserAuthService userAuthService , OrganizerAuthService organizerAuthService) {
         this.jwtUtil = jwtUtil;
-        this.authService = authService;
+        this.userAuthService = userAuthService;
+        this.organizerAuthService = organizerAuthService;
     }
 
     @Override
@@ -41,8 +43,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.authService.loadByEmail(email);
-            if (jwtUtil.validateToken(jwt, userDetails.getUsername())) {
+
+            UserDetails userDetails = this.userAuthService.loadByEmail(email);
+
+            // If the user details are not found, try loading as an organizer
+            if (userDetails == null) {
+                userDetails = this.organizerAuthService.loadByEmail(email);
+            }
+
+
+            // If either user or organizer details are found, validate the token
+            if (userDetails != null && jwtUtil.validateToken(jwt, userDetails.getUsername())) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
