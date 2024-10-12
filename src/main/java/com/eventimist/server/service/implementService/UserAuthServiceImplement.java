@@ -3,9 +3,13 @@ package com.eventimist.server.service.implementService;
 import com.eventimist.server.dto.userDTO.UserLoginDTO;
 import com.eventimist.server.dto.userDTO.UserLoginResponseDTO;
 import com.eventimist.server.dto.userDTO.UserRegisterDTO;
+import com.eventimist.server.dto.userDTO.UserRegisterResponseDTO;
 import com.eventimist.server.entities.UserEntity;
+import com.eventimist.server.exceptions.CustomException;
 import com.eventimist.server.repository.UserRepository;
 import com.eventimist.server.service.UserAuthService;
+import com.eventimist.server.utils.JwtUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,40 +19,55 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
-public class UserUserAuthServiceImplement implements UserAuthService {
+public class UserAuthServiceImplement implements UserAuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public UserUserAuthServiceImplement(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    @Autowired
+    private JwtUtil jwtUtil;
+    public UserAuthServiceImplement(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public void registerUser(UserRegisterDTO userRegisterDTO) {
+    public UserRegisterResponseDTO registerUser(UserRegisterDTO userRegisterDTO) {
+        if(checkEmailExists(userRegisterDTO.getEmail())){
+            throw new CustomException("user with this email already exists");
+        }
+
+        UserRegisterResponseDTO userRegisterResponseDTO = new UserRegisterResponseDTO();
         UserEntity user = mapDtoToEntity(userRegisterDTO);
         String encodedPassword = passwordEncoder.encode(userRegisterDTO.getPassword());
         user.setPassword(encodedPassword);
-
         userRepository.save(user);
+        userRegisterResponseDTO.setEmail(userRegisterDTO.getEmail());
+        userRegisterResponseDTO.setName(userRegisterDTO.getName());
+        userRegisterResponseDTO.setToken(jwtUtil.generateToken(userRegisterDTO.getEmail()));
+
+        return  userRegisterResponseDTO;
     }
 
     @Override
     public UserLoginResponseDTO loginUser(UserLoginDTO userLoginDTO) {
         Optional<UserEntity> userOptional = userRepository.findByEmail(userLoginDTO.getEmail());
-        UserLoginResponseDTO response = new UserLoginResponseDTO();
 
-        if (userOptional.isPresent()) {
-            UserEntity userEntity = userOptional.get();
-
-            response.setName(userEntity.getName());
-            response.setEmail(userEntity.getEmail());
-            response.setAuthenticated(passwordEncoder.matches(userLoginDTO.getPassword(), userEntity.getPassword()));
-             return response;
+        if(userOptional.isPresent()){
+            if(passwordEncoder.matches(userLoginDTO.getPassword(), userOptional.get().getPassword())){
+                UserLoginResponseDTO userLoginResponseDTO = new UserLoginResponseDTO();
+                UserEntity userEntity = userOptional.get();
+                userLoginResponseDTO.setName(userEntity.getName());
+                userLoginResponseDTO.setEmail(userEntity.getEmail());
+                userLoginResponseDTO.setToken(jwtUtil.generateToken(userEntity.getEmail()));
+                return  userLoginResponseDTO;
+            }
+            else {
+                throw new CustomException("wrong credentials");
+            }
         }
-        
-        return response;
+    else {
+            throw  new CustomException("user doesnt exist");
+        }
     }
 
     private UserEntity mapDtoToEntity(UserRegisterDTO userRegisterDTO) {

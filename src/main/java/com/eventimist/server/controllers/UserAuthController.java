@@ -1,11 +1,11 @@
 package com.eventimist.server.controllers;
 
 
-import com.eventimist.server.dto.LoginDTO;
-import com.eventimist.server.dto.LoginResponseDTO;
-import com.eventimist.server.dto.RegisterDTO;
-import com.eventimist.server.dto.RegisterResponseDTO;
-import com.eventimist.server.service.AuthService;
+import com.eventimist.server.dto.userDTO.UserLoginDTO;
+import com.eventimist.server.dto.userDTO.UserLoginResponseDTO;
+import com.eventimist.server.dto.userDTO.UserRegisterDTO;
+import com.eventimist.server.dto.userDTO.UserRegisterResponseDTO;
+import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,40 +18,34 @@ import java.util.Map;
 @RequestMapping("/api/auth/user")
 public class UserAuthController {
     @Autowired
-    private AuthService authService;
+    private UserAuthService userAuthService;
 
     @Autowired
     private JwtUtil jwtUtil;
 
     @PostMapping("register")
-    public ResponseEntity<?>register(@RequestBody RegisterDTO registerDTO){
+    public ResponseEntity<?>register(@RequestBody UserRegisterDTO userRegisterDTO){
         try {
-            authService.registerUser(registerDTO);
-            RegisterResponseDTO response = new RegisterResponseDTO();
-            String jwtToken = jwtUtil.generateToken(registerDTO.getEmail());
-            response.setToken(jwtToken);
-            response.setName(registerDTO.getName());
-            response.setEmail(registerDTO.getEmail());
-            return  new ResponseEntity<>(response, HttpStatus.OK);
+           UserRegisterResponseDTO userRegisterResponseDTO = userAuthService.registerUser(userRegisterDTO);
+
+            return  new ResponseEntity<>(userRegisterResponseDTO, HttpStatus.OK);
         }
         catch (Exception e){
 
-            return new ResponseEntity<>("Error creating user", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 
         }
     }
 
     @PostMapping("login")
-    public  ResponseEntity<?>login(@RequestBody LoginDTO loginDTO){
-        LoginResponseDTO response  = authService.loginUser(loginDTO);
-        boolean isAuthenticated = response.isAuthenticated();
-        if (isAuthenticated) {
-            String jwtToken = jwtUtil.generateToken(loginDTO.getEmail());
-           response.setToken(jwtToken);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>("Invalid email or password", HttpStatus.UNAUTHORIZED);
-        }
+    public  ResponseEntity<?>login(@RequestBody UserLoginDTO userLoginDTO){
+       try{
+           UserLoginResponseDTO userLoginResponseDTO = userAuthService.loginUser(userLoginDTO);
+            return  new ResponseEntity<>(userLoginResponseDTO, HttpStatus.OK);
+
+       } catch (Exception e) {
+           return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+       }
     }
 
     @PostMapping("check-email")
@@ -65,7 +59,7 @@ public class UserAuthController {
         // Remove any leading/trailing whitespace and convert to lowercase
         email = email.trim().toLowerCase();
 
-        boolean emailExists = authService.checkEmailExists(email);
+        boolean emailExists = userAuthService.checkEmailExists(email);
 
         if (emailExists) {
             return ResponseEntity.ok(Map.of("message", "Email exists", "exists", true));
