@@ -25,27 +25,18 @@ public class UserAuthController {
 
     @PostMapping("register")
     public ResponseEntity<?>register(@RequestBody UserRegisterDTO userRegisterDTO){
-        try {
+
            UserRegisterResponseDTO userRegisterResponseDTO = userAuthService.registerUser(userRegisterDTO);
 
             return  new ResponseEntity<>(userRegisterResponseDTO, HttpStatus.OK);
-        }
-        catch (Exception e){
 
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-
-        }
     }
 
     @PostMapping("login")
     public  ResponseEntity<?>login(@RequestBody UserLoginDTO userLoginDTO){
-       try{
+
            UserLoginResponseDTO userLoginResponseDTO = userAuthService.loginUser(userLoginDTO);
             return  new ResponseEntity<>(userLoginResponseDTO, HttpStatus.OK);
-
-       } catch (Exception e) {
-           return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
-       }
     }
 
     @PostMapping("check-email")

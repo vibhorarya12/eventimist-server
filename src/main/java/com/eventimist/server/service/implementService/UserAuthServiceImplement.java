@@ -6,6 +6,9 @@ import com.eventimist.server.dto.userDTO.UserRegisterDTO;
 import com.eventimist.server.dto.userDTO.UserRegisterResponseDTO;
 import com.eventimist.server.entities.UserEntity;
 import com.eventimist.server.exceptions.CustomException;
+import com.eventimist.server.exceptions.EntityNotFoundException;
+import com.eventimist.server.exceptions.ExistingEntityException;
+import com.eventimist.server.exceptions.WrongCredentialsException;
 import com.eventimist.server.repository.UserRepository;
 import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
@@ -33,7 +36,7 @@ public class UserAuthServiceImplement implements UserAuthService {
     @Override
     public UserRegisterResponseDTO registerUser(UserRegisterDTO userRegisterDTO) {
         if(checkEmailExists(userRegisterDTO.getEmail())){
-            throw new CustomException("user with this email already exists");
+            throw new ExistingEntityException("User with this email already exists");
         }
 
         UserRegisterResponseDTO userRegisterResponseDTO = new UserRegisterResponseDTO();
@@ -62,11 +65,11 @@ public class UserAuthServiceImplement implements UserAuthService {
                 return  userLoginResponseDTO;
             }
             else {
-                throw new CustomException("wrong credentials");
+                throw new WrongCredentialsException("Invalid valid credentials");
             }
         }
     else {
-            throw  new CustomException("user doesnt exist");
+            throw  new EntityNotFoundException("User not found");
         }
     }
 
