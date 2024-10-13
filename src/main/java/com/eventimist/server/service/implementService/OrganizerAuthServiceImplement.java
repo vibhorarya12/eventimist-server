@@ -7,6 +7,9 @@ import com.eventimist.server.dto.organizerDTO.OrganizerRegisterResponseDTO;
 import com.eventimist.server.entities.OrganizerEntity;
 import com.eventimist.server.entities.UserEntity;
 import com.eventimist.server.exceptions.CustomException;
+import com.eventimist.server.exceptions.EntityNotFoundException;
+import com.eventimist.server.exceptions.ExistingEntityException;
+import com.eventimist.server.exceptions.WrongCredentialsException;
 import com.eventimist.server.repository.OrganizerRepository;
 import com.eventimist.server.service.OrganizerAuthService;
 import com.eventimist.server.utils.JwtUtil;
@@ -47,14 +50,14 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
                 organizerLoginResponseDTO.setProfilePic(organizer.getProfile_pic());
                 return organizerLoginResponseDTO;
             } else {
-                // Throw a custom exception with a clear message if the password is incorrect
-                throw new CustomException("Wrong credentials. Please try again.");
+
+                throw new WrongCredentialsException("Invalid valid credentials");
             }
 
 
         }
         else {
-            throw new CustomException("Organizer not found. Please register first.");
+            throw  new EntityNotFoundException("organizer not found");
         }
 
     }
@@ -64,7 +67,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
     public OrganizerRegisterResponseDTO registerOrganizer(OrganizerRegisterDTO organizerRegisterDTO) {
         // Check if the organizer already exists (optional)
         if (checkEmailExists(organizerRegisterDTO.getEmail())) {
-            throw new CustomException("organizer with this  email already exists");
+            throw new ExistingEntityException("organizer with this email already exists");
         }
 
         // Map DTO to entity and save
