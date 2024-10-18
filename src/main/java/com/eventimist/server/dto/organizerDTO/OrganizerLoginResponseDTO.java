@@ -12,5 +12,7 @@ public class OrganizerLoginResponseDTO {
 
     private String profilePic ;
 
+    private  String token;
+
 
 }
