@@ -1,5 +1,6 @@
 package com.eventimist.server.security;
 
+import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.service.OrganizerAuthService;
 import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
@@ -10,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -43,18 +45,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = null;
 
-            UserDetails userDetails = this.userAuthService.loadByEmail(email);
+            // Check if the request is for an organizer endpoint
+            if (request.getRequestURI().startsWith("/api/organizer/")) {
+                // Try loading organizer details
+                try {
+                    userDetails = this.organizerAuthService.loadByEmail(email);
+                } catch (EntityNotFoundException ex) {
 
-            // If the user details are not found, try loading as an organizer
-            if (userDetails == null) {
-                userDetails = this.organizerAuthService.loadByEmail(email);
+                    // Organizer not found, userDetails remains null
+
+                }
+            } else {
+                // Try loading user details from UserAuthService
+                try {
+                    userDetails = this.userAuthService.loadByEmail(email);
+                } catch (UsernameNotFoundException ex) {
+                    // User not found, userDetails remains null
+                }
             }
 
-
-            // If either user or organizer details are found, validate the token
+            // If the correct userDetails are found, validate the token
             if (userDetails != null && jwtUtil.validateToken(jwt, userDetails.getUsername())) {
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
@@ -62,4 +77,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         chain.doFilter(request, response);
     }
+
 }
