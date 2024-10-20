@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("api/event/")
-public class EventControllers {
+@RequestMapping("api/organizer")
+public class OrganizerEventControllers {
 
     @GetMapping("allEvents")
     public String allEvents(){
