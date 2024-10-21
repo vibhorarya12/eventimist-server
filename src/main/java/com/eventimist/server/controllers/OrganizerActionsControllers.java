@@ -2,6 +2,7 @@ package com.eventimist.server.controllers;
 
 
 import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
+import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.service.OrganizerActionsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,9 @@ public class OrganizerActionsControllers {
           return  new ResponseEntity<>("event created successfully", HttpStatus.OK);
     }
     @GetMapping("all-events")
-    public ResponseEntity<List<EventEntity>> getAllEvents(@RequestParam Long organizerId) {
-        List<EventEntity> events = organizerActionsService.getEventsByOrganizerId(organizerId);
-        return ResponseEntity.ok(events);
+    public ResponseEntity<?> getAllEvents(@RequestParam Long organizerId) {
+        List<GetEventsResponseDTO> events = organizerActionsService.getEventsByOrganizerId(organizerId);
+        return  new ResponseEntity<>(events, HttpStatus.OK);
 
     }
 

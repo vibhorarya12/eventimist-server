@@ -1,6 +1,7 @@
 package com.eventimist.server.service.implementService;
 
 import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
+import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.entities.OrganizerEntity;
 import com.eventimist.server.repository.EventRepository;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class OrganizerActionsServiceImplement implements OrganizerActionsService {
@@ -45,8 +47,31 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         // Save the event entity in the repository
         return eventRepository.save(eventEntity);
     }
+
     @Override
-    public List<EventEntity> getEventsByOrganizerId(Long organizerId) {
-        return eventRepository.findByOrganizerId(organizerId);
+    public List<GetEventsResponseDTO> getEventsByOrganizerId(Long organizerId) {
+        // Fetch events for the given organizerId from the repository
+        List<EventEntity> events = eventRepository.findByOrganizerId(organizerId);
+
+        // Map each EventEntity to GetEventsResponseDTO
+        return events.stream()
+                .map(this::mapToGetEventsResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    private GetEventsResponseDTO mapToGetEventsResponseDTO(EventEntity event) {
+        GetEventsResponseDTO dto = new GetEventsResponseDTO();
+        dto.setId(event.getId());
+        dto.setTitle(event.getTitle());
+        dto.setType(event.getType());
+        dto.setDescription(event.getDescription());
+        dto.setDate(event.getDate());
+        dto.setVenue(event.getVenue());
+        dto.setTags(event.getTags());
+        dto.setLatitude(event.getLatitude());
+        dto.setLongitude(event.getLongitude());
+        dto.setImages(event.getImages());
+        dto.setAttendance(event.getAttendance());
+        return dto;
     }
 }
