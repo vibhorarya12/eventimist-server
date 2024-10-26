@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth/organizer")
@@ -31,9 +32,9 @@ public class OrganizerAuthController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<?> register(@RequestBody OrganizerRegisterDTO organizerRegisterDTO){
+    public ResponseEntity<?> register(@ModelAttribute OrganizerRegisterDTO organizerRegisterDTO , @RequestPart MultipartFile file){
 
-         OrganizerRegisterResponseDTO organizerRegisterResponseDTO  = organizerAuthService.registerOrganizer(organizerRegisterDTO);
+         OrganizerRegisterResponseDTO organizerRegisterResponseDTO  = organizerAuthService.registerOrganizer(organizerRegisterDTO,file);
 
            return  new ResponseEntity<>(organizerRegisterResponseDTO, HttpStatus.OK);
 

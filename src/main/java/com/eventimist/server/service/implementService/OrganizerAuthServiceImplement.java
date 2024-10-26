@@ -11,6 +11,7 @@ import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.exceptions.ExistingEntityException;
 import com.eventimist.server.exceptions.WrongCredentialsException;
 import com.eventimist.server.repository.OrganizerRepository;
+import com.eventimist.server.service.CloudinaryService;
 import com.eventimist.server.service.OrganizerAuthService;
 import com.eventimist.server.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -29,6 +31,9 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
     private final PasswordEncoder passwordEncoder;
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
 
     public OrganizerAuthServiceImplement(OrganizerRepository organizerRepository, PasswordEncoder passwordEncoder) {
         this.organizerRepository = organizerRepository;
@@ -64,27 +69,27 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
 
 
     @Override
-    public OrganizerRegisterResponseDTO registerOrganizer(OrganizerRegisterDTO organizerRegisterDTO) {
+    public OrganizerRegisterResponseDTO registerOrganizer(OrganizerRegisterDTO organizerRegisterDTO , MultipartFile file) {
         // Check if the organizer already exists (optional)
         if (checkEmailExists(organizerRegisterDTO.getEmail())) {
             throw new ExistingEntityException("organizer with this email already exists");
         }
 
         // Map DTO to entity and save
-        OrganizerEntity organizerEntity = mapDtoToEntity(organizerRegisterDTO);
+        OrganizerEntity organizerEntity = mapDtoToEntity(organizerRegisterDTO , file);
         organizerRepository.save(organizerEntity);
         OrganizerRegisterResponseDTO organizerRegisterResponseDTO = new OrganizerRegisterResponseDTO();
         organizerRegisterResponseDTO.setName(organizerRegisterDTO.getName());
         organizerRegisterResponseDTO.setToken(jwtUtil.generateToken(organizerRegisterDTO.getEmail()));
         organizerRegisterResponseDTO.setEmail(organizerRegisterDTO.getEmail());
         organizerRegisterResponseDTO.setBio(organizerRegisterDTO.getBio());
-        organizerRegisterResponseDTO.setProfilePic(organizerRegisterDTO.getProfilePic());
+        organizerRegisterResponseDTO.setProfilePic(organizerEntity.getProfile_pic());
         return  organizerRegisterResponseDTO;
 
 
     }
 
-    private OrganizerEntity mapDtoToEntity(OrganizerRegisterDTO organizerRegisterDTO) {
+    private OrganizerEntity mapDtoToEntity(OrganizerRegisterDTO organizerRegisterDTO , MultipartFile file) {
         OrganizerEntity organizerEntity = new OrganizerEntity();
 
         organizerEntity.setName(organizerRegisterDTO.getName());
@@ -94,7 +99,8 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
         organizerEntity.setPassword(passwordEncoder.encode(organizerRegisterDTO.getPassword()));
 
         organizerEntity.setBio(organizerRegisterDTO.getBio());
-        organizerEntity.setProfile_pic(organizerRegisterDTO.getProfilePic());
+
+        organizerEntity.setProfile_pic(cloudinaryService.CloudinaryImageUpload(file));
 
         return organizerEntity;
     }
