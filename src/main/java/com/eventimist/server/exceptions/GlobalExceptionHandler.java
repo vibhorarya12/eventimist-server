@@ -40,5 +40,13 @@ public ResponseEntity<ErrorResponse> handleExistingEntityException(ExistingEntit
        return  new ResponseEntity<ErrorResponse>(errorResponse , HttpStatus.CONFLICT);
 
 }
+@ExceptionHandler(ImageUploadException.class)
+ public  ResponseEntity<ErrorResponse> handleImageUploadException(ImageUploadException ex , WebRequest webRequest){
+    ErrorResponse errorResponse =  new ErrorResponse();
+    errorResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+    errorResponse.setMessage(ex.getMessage());
+    errorResponse.setTimestamp(new Date());
+    return  new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.BAD_REQUEST);
+}
 
 }
