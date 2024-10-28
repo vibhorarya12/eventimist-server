@@ -70,7 +70,6 @@ public class UserActionsServiceImplement implements UserActionsService {
         }
     }
 
-
     @Override
     public List<EventsResponseDTO> getBookmarkedEvents(Long userId) {
         // Fetch the user by ID
@@ -79,6 +78,28 @@ public class UserActionsServiceImplement implements UserActionsService {
 
         // Map the list of bookmarked events to BookmarkedEventDTO
         return user.getBookmarkedEvents().stream()
+                .map(event -> {
+                    EventsResponseDTO dto = new EventsResponseDTO();
+                    dto.setId(event.getId());
+                    dto.setTitle(event.getTitle());
+                    dto.setType(event.getType());
+                    dto.setDescription(event.getDescription());
+                    dto.setDate(event.getDate());
+                    dto.setVenue(event.getVenue());
+                    dto.setAttendance(event.getAttendance());
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+   public List<EventsResponseDTO>getAttendingEvents (Long userId){
+        // Fetch the user by ID
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Map the list of bookmarked events to BookmarkedEventDTO
+        return user.getAttendingEvents().stream()
                 .map(event -> {
                     EventsResponseDTO dto = new EventsResponseDTO();
                     dto.setId(event.getId());

@@ -37,5 +37,11 @@ public class UserActionsControllers {
 
         return  new ResponseEntity<>(events, HttpStatus.OK);
     }
+    @GetMapping("get-attending-events")
+    ResponseEntity<?> getAttendingEvents(@RequestParam Long userId){
+        List<EventsResponseDTO> events = userActionsService.getAttendingEvents(userId);
+
+        return  new ResponseEntity<>(events, HttpStatus.OK);
+    }
 
 }

@@ -9,4 +9,5 @@ public interface UserActionsService {
     void bookmarkEvents (Long userId ,  Long eventId);
     void attendEvents (Long userId , Long eventId);
     List<EventsResponseDTO> getBookmarkedEvents (Long userId );
+    List<EventsResponseDTO>getAttendingEvents (Long userId);
 }
