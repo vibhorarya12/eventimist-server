@@ -22,5 +22,11 @@ public class UserActionsControllers {
         userActionsService.bookmarkEvents(userId,eventId);
         return  new ResponseEntity<>("added", HttpStatus.OK);
     }
+    @PostMapping ("attend-event")
+    ResponseEntity<?> attendEvent(@RequestParam Long userId , @RequestParam Long eventId){
+        userActionsService.attendEvents(userId, eventId);
+        return  new ResponseEntity<>("updated", HttpStatus.OK );
+
+    }
 
 }
