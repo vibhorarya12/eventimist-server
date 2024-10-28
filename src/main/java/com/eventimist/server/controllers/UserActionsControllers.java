@@ -1,9 +1,12 @@
 package com.eventimist.server.controllers;
+import com.eventimist.server.dto.UserActionsDTO.EventsResponseDTO;
 import com.eventimist.server.service.UserActionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/user")
@@ -27,6 +30,12 @@ public class UserActionsControllers {
         userActionsService.attendEvents(userId, eventId);
         return  new ResponseEntity<>("updated", HttpStatus.OK );
 
+    }
+    @GetMapping("get-bookmarked-events")
+    ResponseEntity<?> getBookMarkedEvents(@RequestParam Long userId){
+        List<EventsResponseDTO> events = userActionsService.getBookmarkedEvents(userId);
+
+        return  new ResponseEntity<>(events, HttpStatus.OK);
     }
 
 }
