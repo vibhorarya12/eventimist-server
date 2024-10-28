@@ -39,4 +39,31 @@ public class UserActionsServiceImplement implements UserActionsService {
         // Save the updated user entity
         userRepository.save(user);
     }
+
+    @Override
+    public void attendEvents(Long userId, Long eventId) {
+        // Fetch the user by ID
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Fetch the event by ID
+        EventEntity event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+
+        // Check if the user is not already attending the event
+        if (!user.getAttendingEvents().contains(event)) {
+            // Increment the event's attendance count
+            event.setAttendance(event.getAttendance() + 1);
+
+            // Add the event to the user's attending events list
+            user.getAttendingEvents().add(event);
+
+            // Save the updated event entity to the database
+            eventRepository.save(event);
+
+            // Save the updated user entity to the database
+            userRepository.save(user);
+        }
+    }
+
 }
