@@ -1,5 +1,6 @@
 package com.eventimist.server.service.implementService;
 
+import com.eventimist.server.dto.UserActionsDTO.EventsResponseDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.entities.UserEntity;
 import com.eventimist.server.exceptions.EntityNotFoundException;
@@ -8,6 +9,9 @@ import com.eventimist.server.repository.UserRepository;
 import com.eventimist.server.service.UserActionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserActionsServiceImplement implements UserActionsService {
@@ -64,6 +68,29 @@ public class UserActionsServiceImplement implements UserActionsService {
             // Save the updated user entity to the database
             userRepository.save(user);
         }
+    }
+
+
+    @Override
+    public List<EventsResponseDTO> getBookmarkedEvents(Long userId) {
+        // Fetch the user by ID
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Map the list of bookmarked events to BookmarkedEventDTO
+        return user.getBookmarkedEvents().stream()
+                .map(event -> {
+                    EventsResponseDTO dto = new EventsResponseDTO();
+                    dto.setId(event.getId());
+                    dto.setTitle(event.getTitle());
+                    dto.setType(event.getType());
+                    dto.setDescription(event.getDescription());
+                    dto.setDate(event.getDate());
+                    dto.setVenue(event.getVenue());
+                    dto.setAttendance(event.getAttendance());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
 }
