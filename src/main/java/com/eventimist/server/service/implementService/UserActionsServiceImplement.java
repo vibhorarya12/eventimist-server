@@ -2,6 +2,7 @@ package com.eventimist.server.service.implementService;
 
 import com.eventimist.server.dto.UserActionsDTO.EventsResponseDTO;
 import com.eventimist.server.entities.EventEntity;
+import com.eventimist.server.entities.OrganizerEntity;
 import com.eventimist.server.entities.UserEntity;
 import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.repository.EventRepository;
@@ -86,7 +87,14 @@ public class UserActionsServiceImplement implements UserActionsService {
                     dto.setDescription(event.getDescription());
                     dto.setDate(event.getDate());
                     dto.setVenue(event.getVenue());
+                    dto.setImages(event.getImages());
                     dto.setAttendance(event.getAttendance());
+
+                    // organizer info mapping //
+                    dto.setOrganizerId(event.getOrganizer().getId());
+                    dto.setOrganizerName(event.getOrganizer().getName());
+                    dto.setOrganizerProfilePic(event.getOrganizer().getProfile_pic());
+
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -109,6 +117,14 @@ public class UserActionsServiceImplement implements UserActionsService {
                     dto.setDate(event.getDate());
                     dto.setVenue(event.getVenue());
                     dto.setAttendance(event.getAttendance());
+                    dto.setImages(event.getImages());
+
+                    // organizer info mapping //
+                       dto.setOrganizerId(event.getOrganizer().getId());
+                       dto.setOrganizerName(event.getOrganizer().getName());
+                       dto.setOrganizerProfilePic(event.getOrganizer().getProfile_pic());
+
+
                     return dto;
                 })
                 .collect(Collectors.toList());
