@@ -8,9 +8,11 @@ import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.repository.EventRepository;
 import com.eventimist.server.repository.UserRepository;
 import com.eventimist.server.service.UserActionsService;
+import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -101,7 +103,7 @@ public class UserActionsServiceImplement implements UserActionsService {
     }
 
     @Override
-   public List<EventsResponseDTO>getAttendingEvents (Long userId){
+    public List<EventsResponseDTO> getAttendingEvents(Long userId) {
         // Fetch the user by ID
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -120,14 +122,63 @@ public class UserActionsServiceImplement implements UserActionsService {
                     dto.setImages(event.getImages());
 
                     // organizer info mapping //
-                       dto.setOrganizerId(event.getOrganizer().getId());
-                       dto.setOrganizerName(event.getOrganizer().getName());
-                       dto.setOrganizerProfilePic(event.getOrganizer().getProfile_pic());
+                    dto.setOrganizerId(event.getOrganizer().getId());
+                    dto.setOrganizerName(event.getOrganizer().getName());
+                    dto.setOrganizerProfilePic(event.getOrganizer().getProfile_pic());
 
 
                     return dto;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventsResponseDTO> getNearbyEvents(double latitude, double longitude, double radiusKm) {
+        try {
+            // Convert radius from kilometers to meters
+            double radiusInMeters = radiusKm * 1000;
+
+            // Fetch nearby events using PostGIS
+            List<EventEntity> nearbyEvents = eventRepository.findNearbyEvents(
+                    latitude,
+                    longitude,
+                    radiusInMeters
+            );
+
+            // Convert to DTOs
+            return nearbyEvents.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+//            log.error("Error finding nearby events: ", e);
+            throw new RuntimeException("Failed to find nearby events", e);
+        }
+    }
+
+    private EventsResponseDTO convertToDTO(EventEntity event) {
+        Point location = event.getLocation();
+
+        // Create a new instance of EventsResponseDTO
+        EventsResponseDTO eventsResponseDTO = new EventsResponseDTO();
+
+        // Set values using the setter methods
+        eventsResponseDTO.setId(event.getId());
+        eventsResponseDTO.setTitle(event.getTitle());
+        eventsResponseDTO.setType(event.getType());
+        eventsResponseDTO.setDescription(event.getDescription());
+        eventsResponseDTO.setDate(event.getDate());
+        eventsResponseDTO.setVenue(event.getVenue());
+//        eventsResponseDTO.setTags(event.getTags());
+        eventsResponseDTO.setLocation(location);
+        // Set latitude and longitude
+//        eventsResponseDTO.setLatitude(location.getY());  // Latitude is Y coordinate
+//        eventsResponseDTO.setLongitude(location.getX()); // Longitude is X coordinate
+        eventsResponseDTO.setImages(event.getImages());
+        eventsResponseDTO.setAttendance(event.getAttendance());
+
+        // Return the populated EventsResponseDTO
+        return eventsResponseDTO;
     }
 
 }
