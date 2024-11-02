@@ -1,6 +1,7 @@
 package com.eventimist.server.dto.organizerActionsDTO;
 
 import lombok.Data;
+import org.locationtech.jts.geom.Point;
 
 import java.util.Date;
 import java.util.List;
@@ -14,8 +15,8 @@ public class GetEventsResponseDTO {
     private Date date;
     private String venue;
     private List<String> tags;
-    private String latitude;
-    private String longitude;
+    private Double latitude;
+    private Double longitude;
     private List<String> images;
     private Long attendance;
 

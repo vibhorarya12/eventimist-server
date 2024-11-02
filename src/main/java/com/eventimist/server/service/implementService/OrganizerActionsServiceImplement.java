@@ -9,6 +9,10 @@ import com.eventimist.server.repository.EventRepository;
 import com.eventimist.server.repository.OrganizerRepository;
 import com.eventimist.server.service.CloudinaryService;
 import com.eventimist.server.service.OrganizerActionsService;
+import lombok.extern.slf4j.Slf4j;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,29 +24,33 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class OrganizerActionsServiceImplement implements OrganizerActionsService {
 
     private final EventRepository eventRepository;
     private final OrganizerRepository organizerRepository;
+    private final GeometryFactory geometryFactory = new GeometryFactory();
+
+    private final CloudinaryService cloudinaryService;
 
     @Autowired
-    private CloudinaryService cloudinaryService;
-
-    @Autowired
-    public OrganizerActionsServiceImplement(EventRepository eventRepository, OrganizerRepository organizerRepository) {
+    public OrganizerActionsServiceImplement(EventRepository eventRepository, OrganizerRepository organizerRepository, CloudinaryService cloudinaryService) {
         this.eventRepository = eventRepository;
         this.organizerRepository = organizerRepository;
+        this.cloudinaryService = cloudinaryService;
     }
 
     @Override
     public EventEntity createEvent(CreateEventDTO createEventDTO, MultipartFile[] files) {
         EventEntity eventEntity = new EventEntity();
+
+        // Set basic details
         eventEntity.setTitle(createEventDTO.getTitle());
         eventEntity.setType(createEventDTO.getType());
         eventEntity.setDescription(createEventDTO.getDescription());
 
-        //handle date from string to date //
+        // Handle date from string to Date object
         try {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
             Date parsedDate = dateFormat.parse(createEventDTO.getDate());
@@ -51,11 +59,15 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
             throw new RuntimeException("Invalid date format", e);
         }
 
+        // Set location as a Point object
+        Point location = geometryFactory.createPoint(new Coordinate(createEventDTO.getLongitude(), createEventDTO.getLatitude()));
+        eventEntity.setLocation(location);
+
+        // Set other fields
         eventEntity.setVenue(createEventDTO.getVenue());
         eventEntity.setTags(createEventDTO.getTags());
-        eventEntity.setLatitude(createEventDTO.getLatitude());
-        eventEntity.setLongitude(createEventDTO.getLongitude());
         eventEntity.setAttendance(createEventDTO.getAttendance());
+
         // Upload each image to Cloudinary and collect the URLs
         List<String> imageUrls = Arrays.stream(files)
                 .map(file -> {
@@ -63,7 +75,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
                         // Upload the file and get the URL
                         return cloudinaryService.CloudinaryImageUpload(file);
                     } catch (Exception e) {
-                        throw new ImageUploadException("failed to upload image");
+                        throw new ImageUploadException("Failed to upload image");
                     }
                 })
                 .collect(Collectors.toList());
@@ -75,7 +87,6 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         OrganizerEntity organizer = organizerRepository.findById(createEventDTO.getOrganizerId())
                 .orElseThrow(() -> new RuntimeException("Organizer not found"));
         eventEntity.setOrganizer(organizer);
-
 
         return eventRepository.save(eventEntity);
     }
@@ -93,6 +104,8 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
 
     private GetEventsResponseDTO mapToGetEventsResponseDTO(EventEntity event) {
         GetEventsResponseDTO dto = new GetEventsResponseDTO();
+
+        // Set basic details
         dto.setId(event.getId());
         dto.setTitle(event.getTitle());
         dto.setType(event.getType());
@@ -100,10 +113,16 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         dto.setDate(event.getDate());
         dto.setVenue(event.getVenue());
         dto.setTags(event.getTags());
-        dto.setLatitude(event.getLatitude());
-        dto.setLongitude(event.getLongitude());
+
+        // Set location coordinates from Point object
+        dto.setLatitude(event.getLocation().getY()); // Latitude is Y coordinate
+        dto.setLongitude(event.getLocation().getX()); // Longitude is X coordinate
+        System.out.println(event.getLocation());
+
+        // Set other fields
         dto.setImages(event.getImages());
         dto.setAttendance(event.getAttendance());
+
         return dto;
     }
 }
