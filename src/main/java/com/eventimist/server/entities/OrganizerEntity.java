@@ -73,9 +73,9 @@ public class OrganizerEntity {
         this.events = events;
     }
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private  String bio;
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String profile_pic;
 
     @OneToMany(mappedBy = "organizer", cascade = CascadeType.ALL, orphanRemoval = true)
