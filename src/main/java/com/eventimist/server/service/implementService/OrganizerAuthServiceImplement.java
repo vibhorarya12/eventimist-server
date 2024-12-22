@@ -56,7 +56,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
                 return organizerLoginResponseDTO;
             } else {
 
-                throw new WrongCredentialsException("Invalid valid credentials");
+                throw new WrongCredentialsException("Invalid credentials");
             }
 
 
@@ -69,27 +69,25 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
 
 
     @Override
-    public OrganizerRegisterResponseDTO registerOrganizer(OrganizerRegisterDTO organizerRegisterDTO , MultipartFile file) {
+    public OrganizerRegisterResponseDTO registerOrganizer(OrganizerRegisterDTO organizerRegisterDTO) {
         // Check if the organizer already exists (optional)
         if (checkEmailExists(organizerRegisterDTO.getEmail())) {
             throw new ExistingEntityException("organizer with this email already exists");
         }
 
         // Map DTO to entity and save
-        OrganizerEntity organizerEntity = mapDtoToEntity(organizerRegisterDTO , file);
+        OrganizerEntity organizerEntity = mapDtoToEntity(organizerRegisterDTO);
         organizerRepository.save(organizerEntity);
         OrganizerRegisterResponseDTO organizerRegisterResponseDTO = new OrganizerRegisterResponseDTO();
         organizerRegisterResponseDTO.setName(organizerRegisterDTO.getName());
         organizerRegisterResponseDTO.setToken(jwtUtil.generateToken(organizerRegisterDTO.getEmail()));
         organizerRegisterResponseDTO.setEmail(organizerRegisterDTO.getEmail());
-        organizerRegisterResponseDTO.setBio(organizerRegisterDTO.getBio());
-        organizerRegisterResponseDTO.setProfilePic(organizerEntity.getProfile_pic());
         return  organizerRegisterResponseDTO;
 
 
     }
 
-    private OrganizerEntity mapDtoToEntity(OrganizerRegisterDTO organizerRegisterDTO , MultipartFile file) {
+    private OrganizerEntity mapDtoToEntity(OrganizerRegisterDTO organizerRegisterDTO ) {
         OrganizerEntity organizerEntity = new OrganizerEntity();
 
         organizerEntity.setName(organizerRegisterDTO.getName());
@@ -97,11 +95,6 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
 
         // Encode password before saving
         organizerEntity.setPassword(passwordEncoder.encode(organizerRegisterDTO.getPassword()));
-
-        organizerEntity.setBio(organizerRegisterDTO.getBio());
-
-        organizerEntity.setProfile_pic(cloudinaryService.CloudinaryImageUpload(file));
-
         return organizerEntity;
     }
     @Override

@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface OrganizerAuthService {
-    OrganizerRegisterResponseDTO registerOrganizer (OrganizerRegisterDTO organizerRegisterDTO , MultipartFile file);
+    OrganizerRegisterResponseDTO registerOrganizer (OrganizerRegisterDTO organizerRegisterDTO);
     OrganizerLoginResponseDTO organizerLogin(OrganizerLoginDTO organizerLoginDTO);
     UserDetails loadByEmail(String email);
     boolean checkEmailExists(String email);

@@ -32,9 +32,9 @@ public class OrganizerAuthController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<?> register(@ModelAttribute OrganizerRegisterDTO organizerRegisterDTO , @RequestPart MultipartFile file){
+    public ResponseEntity<?> register(@RequestBody OrganizerRegisterDTO organizerRegisterDTO){
 
-         OrganizerRegisterResponseDTO organizerRegisterResponseDTO  = organizerAuthService.registerOrganizer(organizerRegisterDTO,file);
+         OrganizerRegisterResponseDTO organizerRegisterResponseDTO  = organizerAuthService.registerOrganizer(organizerRegisterDTO);
 
            return  new ResponseEntity<>(organizerRegisterResponseDTO, HttpStatus.OK);
 
