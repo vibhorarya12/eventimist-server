@@ -8,17 +8,11 @@ public class OrganizerRegisterDTO {
 
     private String name;
 
-
     private String email;
-
 
     private String password;
 
-
-    private String bio;
-
-
-    private String profilePic;
+    private String clerkSessionId;
 
 
 
