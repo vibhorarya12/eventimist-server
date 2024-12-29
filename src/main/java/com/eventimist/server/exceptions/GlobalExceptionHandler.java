@@ -49,4 +49,14 @@ public ResponseEntity<ErrorResponse> handleExistingEntityException(ExistingEntit
     return  new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.BAD_REQUEST);
 }
 
+@ExceptionHandler (ClerkAuthSessionException.class)
+public  ResponseEntity<ErrorResponse> handleClerkAuthSessionException (ClerkAuthSessionException ex , WebRequest webRequest){
+    ErrorResponse errorResponse =  new ErrorResponse();
+    errorResponse.setStatusCode(HttpStatus.NOT_FOUND.value());
+    errorResponse.setMessage(ex.getMessage());
+    errorResponse.setTimestamp(new Date());
+    return  new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.NOT_FOUND);
+}
+
+
 }
