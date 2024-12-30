@@ -1,6 +1,7 @@
 package com.eventimist.server.security;
 
 import com.eventimist.server.exceptions.EntityNotFoundException;
+import com.eventimist.server.exceptions.JwtAuthException;
 import com.eventimist.server.service.OrganizerAuthService;
 import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
@@ -39,43 +40,77 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String email = null;
         String jwt = null;
 
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            email = jwtUtil.extractEmail(jwt);
-        }
+        try {
+            // Check if the Authorization header is present and starts with "Bearer "
+            if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+                jwt = authorizationHeader.substring(7);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = null;
-
-            // Check if the request is for an organizer endpoint
-            if (request.getRequestURI().startsWith("/api/organizer/")) {
-                // Try loading organizer details
-                try {
-                    userDetails = this.organizerAuthService.loadByEmail(email);
-                } catch (EntityNotFoundException ex) {
-
-                    // Organizer not found, userDetails remains null
-
-                }
+                // Extract email from JWT
+                email = jwtUtil.extractEmail(jwt);
             } else {
-                // Try loading user details from UserAuthService
-                try {
+                throw new JwtAuthException("Authorization header is missing or invalid!");
+            }
+
+            // Proceed if email is extracted and no authentication exists in the SecurityContext
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = null;
+
+                // Determine whether the request is for organizer or user
+                if (request.getRequestURI().startsWith("/api/organizer/")) {
+                    userDetails = this.organizerAuthService.loadByEmail(email);
+                } else {
                     userDetails = this.userAuthService.loadByEmail(email);
-                } catch (UsernameNotFoundException ex) {
-                    // User not found, userDetails remains null
+                }
+
+                // Validate the JWT token and set authentication
+                if (userDetails != null && jwtUtil.validateToken(jwt, userDetails.getUsername())) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    throw new JwtAuthException("JWT token validation failed!");
                 }
             }
+            // Continue the filter chain
+            chain.doFilter(request, response);
 
-            // If the correct userDetails are found, validate the token
-            if (userDetails != null && jwtUtil.validateToken(jwt, userDetails.getUsername())) {
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
         }
 
-        chain.doFilter(request, response);
+        catch (io.jsonwebtoken.ExpiredJwtException ex) {
+            // Handle expired JWT
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"JWT token is expired!\"}");
+        } catch (io.jsonwebtoken.SignatureException ex) {
+            // Handle invalid signature
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Invalid JWT signature!\"}");
+        } catch (io.jsonwebtoken.MalformedJwtException ex) {
+            // Handle malformed JWT
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Malformed JWT token!\"}");
+        }
+
+        catch (JwtAuthException ex) {
+            // Catch and handle custom JWT exceptions
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"" + ex.getMessage() + "\"}");
+        } catch (UsernameNotFoundException | EntityNotFoundException ex) {
+            // Handle case when user or organizer not found
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"User or Organizer not found!\"}");
+        } catch (Exception ex) {
+            // Handle unexpected errors
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Internal Server Error: " + ex.getMessage() + "\"}");
+        }
     }
+
 
 }
