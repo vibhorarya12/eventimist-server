@@ -5,9 +5,12 @@ import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.TestingDTO;
 import com.eventimist.server.service.OrganizerActionsService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("api/organizer")
 public class OrganizerActionsControllers {
@@ -28,27 +32,25 @@ public class OrganizerActionsControllers {
 
     @PostMapping("check")
     public ResponseEntity<?> check(
-            @ModelAttribute TestingDTO testingDTO,
-            @RequestPart("file") MultipartFile file
-    ) {
-        return new ResponseEntity<>(testingDTO.getTitle() + file.getOriginalFilename(), HttpStatus.OK);
+
+    ) throws InterruptedException{
+            log.info("excuting testing thread...........");
+            Thread.sleep(10000);
+        log.info("completed testing thread...........");
+        return new ResponseEntity<>("checking", HttpStatus.OK);
     }
 
 
-
     @PostMapping("create-event")
-    public ResponseEntity<?> createEvent(
-            @ModelAttribute CreateEventDTO createEventDTO,
-            @RequestPart("files") MultipartFile[] files) {
-
-        // Call the service layer to create the event
+    public ResponseEntity<?> createEvent(@ModelAttribute CreateEventDTO createEventDTO,
+                                         @RequestPart("files") MultipartFile[] files) {
         organizerActionsService.createEvent(createEventDTO, files);
 
         // Return a success response
         return new ResponseEntity<>(createEventDTO, HttpStatus.CREATED);
     }
 
-
+    // get all events by organizer ID //
     @GetMapping("all-events")
     public ResponseEntity<?> getAllEvents(@RequestParam Long organizerId) {
         List<GetEventsResponseDTO> events = organizerActionsService.getEventsByOrganizerId(organizerId);
