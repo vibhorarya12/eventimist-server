@@ -57,6 +57,13 @@ public  ResponseEntity<ErrorResponse> handleClerkAuthSessionException (ClerkAuth
     errorResponse.setTimestamp(new Date());
     return  new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.NOT_FOUND);
 }
-
+@ExceptionHandler (JwtAuthException.class)
+public  ResponseEntity<ErrorResponse> handleJwtAuthException (JwtAuthException ex , WebRequest webRequest){
+    ErrorResponse errorResponse =  new ErrorResponse();
+    errorResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+    errorResponse.setMessage(ex.getMessage());
+    errorResponse.setTimestamp(new Date());
+    return  new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.UNAUTHORIZED);
+}
 
 }
