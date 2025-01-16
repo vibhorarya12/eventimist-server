@@ -144,7 +144,7 @@ public class UserActionsServiceImplement implements UserActionsService {
                     longitude,
                     radiusInMeters
             );
-
+            System.out.println(nearbyEvents);
             // Convert to DTOs
             return nearbyEvents.stream()
                     .map(this::convertToDTO)
@@ -170,7 +170,8 @@ public class UserActionsServiceImplement implements UserActionsService {
         eventsResponseDTO.setDate(event.getDate());
         eventsResponseDTO.setVenue(event.getVenue());
 //        eventsResponseDTO.setTags(event.getTags());
-        eventsResponseDTO.setLocation(location);
+        eventsResponseDTO.setLatitude(location.getY());
+        eventsResponseDTO.setLongitude(location.getX());
         // Set latitude and longitude
 //        eventsResponseDTO.setLatitude(location.getY());  // Latitude is Y coordinate
 //        eventsResponseDTO.setLongitude(location.getX()); // Longitude is X coordinate
