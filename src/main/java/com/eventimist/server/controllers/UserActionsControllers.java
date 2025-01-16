@@ -1,5 +1,6 @@
 package com.eventimist.server.controllers;
 import com.eventimist.server.dto.UserActionsDTO.EventsResponseDTO;
+import com.eventimist.server.dto.UserActionsDTO.NearbyEventsDTO;
 import com.eventimist.server.service.UserActionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,6 +43,15 @@ public class UserActionsControllers {
         List<EventsResponseDTO> events = userActionsService.getAttendingEvents(userId);
 
         return  new ResponseEntity<>(events, HttpStatus.OK);
+    }
+    @PostMapping("get-nearby-events")
+    ResponseEntity<?> getNearbyEvents(@RequestBody NearbyEventsDTO dto){
+
+
+        List<EventsResponseDTO> events =  userActionsService.getNearbyEvents(dto.getLatitude(), dto.getLongitude(),dto.getRadiusKm());
+
+        return  new ResponseEntity<>(events, HttpStatus.OK);
+        
     }
 
 }
