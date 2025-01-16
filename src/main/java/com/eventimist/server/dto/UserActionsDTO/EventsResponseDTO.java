@@ -2,6 +2,7 @@ package com.eventimist.server.dto.UserActionsDTO;
 
 import com.eventimist.server.entities.OrganizerEntity;
 import lombok.Data;
+import org.locationtech.jts.geom.Point;
 
 import java.util.Date;
 import java.util.List;
@@ -19,4 +20,6 @@ public class EventsResponseDTO {
     private Long organizerId;
     private String organizerName;
     private String organizerProfilePic;
+    private Double latitude;
+    private Double longitude;
 }
