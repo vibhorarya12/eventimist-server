@@ -6,11 +6,9 @@ import com.eventimist.server.dto.organizerDTO.OrganizerRegisterDTO;
 import com.eventimist.server.dto.organizerDTO.OrganizerRegisterResponseDTO;
 import com.eventimist.server.entities.OrganizerEntity;
 import com.eventimist.server.entities.UserEntity;
-import com.eventimist.server.exceptions.CustomException;
-import com.eventimist.server.exceptions.EntityNotFoundException;
-import com.eventimist.server.exceptions.ExistingEntityException;
-import com.eventimist.server.exceptions.WrongCredentialsException;
+import com.eventimist.server.exceptions.*;
 import com.eventimist.server.repository.OrganizerRepository;
+import com.eventimist.server.service.ClerkAuthService;
 import com.eventimist.server.service.CloudinaryService;
 import com.eventimist.server.service.OrganizerAuthService;
 import com.eventimist.server.utils.JwtUtil;
@@ -34,6 +32,9 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
     @Autowired
     private CloudinaryService cloudinaryService;
 
+    @Autowired
+    private ClerkAuthService clerkAuthService;
+
 
     public OrganizerAuthServiceImplement(OrganizerRepository organizerRepository, PasswordEncoder passwordEncoder) {
         this.organizerRepository = organizerRepository;
@@ -50,7 +51,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
                 OrganizerLoginResponseDTO organizerLoginResponseDTO = new OrganizerLoginResponseDTO();
                 organizerLoginResponseDTO.setEmail(organizer.getEmail());
                 organizerLoginResponseDTO.setName(organizer.getName());
-                organizerLoginResponseDTO.setToken(jwtUtil.generateToken(organizerLoginDTO.getEmail()));
+                organizerLoginResponseDTO.setToken(jwtUtil.generateToken(organizer.getEmail(), organizer.getId() ));
                 organizerLoginResponseDTO.setBio(organizer.getBio());
                 organizerLoginResponseDTO.setProfilePic(organizer.getProfile_pic());
                 return organizerLoginResponseDTO;
@@ -70,22 +71,33 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
 
     @Override
     public OrganizerRegisterResponseDTO registerOrganizer(OrganizerRegisterDTO organizerRegisterDTO) {
-        // Check if the organizer already exists (optional)
-        if (checkEmailExists(organizerRegisterDTO.getEmail())) {
-            throw new ExistingEntityException("organizer with this email already exists");
+
+        // Authenticate Clerk session
+        if (!clerkAuthService.AuthenticateClerkSession(organizerRegisterDTO.getClerkSessionId())) {
+            throw new ClerkAuthSessionException("Clerk session authentication failed || session is inactive.");
         }
 
-        // Map DTO to entity and save
+        // Check if the organizer already exists
+        if (checkEmailExists(organizerRegisterDTO.getEmail())) {
+            throw new ExistingEntityException("Organizer with this email already exists.");
+        }
+
+        // Map DTO to entity
         OrganizerEntity organizerEntity = mapDtoToEntity(organizerRegisterDTO);
-        organizerRepository.save(organizerEntity);
+
+        // Save organizer to repository
+      Long userId =   organizerRepository.save(organizerEntity).getId();
+
+        // Generate response DTO
         OrganizerRegisterResponseDTO organizerRegisterResponseDTO = new OrganizerRegisterResponseDTO();
         organizerRegisterResponseDTO.setName(organizerRegisterDTO.getName());
-        organizerRegisterResponseDTO.setToken(jwtUtil.generateToken(organizerRegisterDTO.getEmail()));
         organizerRegisterResponseDTO.setEmail(organizerRegisterDTO.getEmail());
-        return  organizerRegisterResponseDTO;
+        organizerRegisterResponseDTO.setToken(jwtUtil.generateToken(organizerRegisterDTO.getEmail() , userId));
 
-
+        // Return response DTO
+        return organizerRegisterResponseDTO;
     }
+
 
     private OrganizerEntity mapDtoToEntity(OrganizerRegisterDTO organizerRegisterDTO ) {
         OrganizerEntity organizerEntity = new OrganizerEntity();

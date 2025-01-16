@@ -43,10 +43,10 @@ public class UserAuthServiceImplement implements UserAuthService {
         UserEntity user = mapDtoToEntity(userRegisterDTO);
         String encodedPassword = passwordEncoder.encode(userRegisterDTO.getPassword());
         user.setPassword(encodedPassword);
-        userRepository.save(user);
+       Long userId = userRepository.save(user).getId();
         userRegisterResponseDTO.setEmail(userRegisterDTO.getEmail());
         userRegisterResponseDTO.setName(userRegisterDTO.getName());
-        userRegisterResponseDTO.setToken(jwtUtil.generateToken(userRegisterDTO.getEmail()));
+        userRegisterResponseDTO.setToken(jwtUtil.generateToken(userRegisterDTO.getEmail(), userId));
 
         return  userRegisterResponseDTO;
     }
@@ -61,7 +61,7 @@ public class UserAuthServiceImplement implements UserAuthService {
                 UserEntity userEntity = userOptional.get();
                 userLoginResponseDTO.setName(userEntity.getName());
                 userLoginResponseDTO.setEmail(userEntity.getEmail());
-                userLoginResponseDTO.setToken(jwtUtil.generateToken(userEntity.getEmail()));
+                userLoginResponseDTO.setToken(jwtUtil.generateToken(userEntity.getEmail(), userEntity.getId()));
                 return  userLoginResponseDTO;
             }
             else {
