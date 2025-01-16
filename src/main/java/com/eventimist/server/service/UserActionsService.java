@@ -10,4 +10,5 @@ public interface UserActionsService {
     void attendEvents (Long userId , Long eventId);
     List<EventsResponseDTO> getBookmarkedEvents (Long userId );
     List<EventsResponseDTO>getAttendingEvents (Long userId);
+    List<EventsResponseDTO>getNearbyEvents(double latitude, double longitude, double radiusKm);
 }
