@@ -45,6 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authorizationHeader = request.getHeader("Authorization");
 
         String email = null;
+        Long userId = null;
         String jwt = null;
 
         try {
@@ -54,6 +55,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Extract email from JWT
                 email = jwtUtil.extractEmail(jwt);
+                userId = jwtUtil.extractUserId(jwt);
+                System.out.println("user Id is : " + userId);
             } else {
                 throw new JwtAuthException("Authorization header is missing or invalid!");
             }
@@ -71,11 +74,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 // Validate the JWT token and set authentication
                 if (userDetails != null && jwtUtil.validateToken(jwt, userDetails.getUsername())) {
+
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
+                            userId, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                } else {
+                }
+
+
+                else {
+
                     throw new JwtAuthException("JWT token validation failed!");
                 }
             }
