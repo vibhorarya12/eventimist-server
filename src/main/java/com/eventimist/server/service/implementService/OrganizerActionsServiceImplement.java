@@ -14,6 +14,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,6 +46,9 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
     @Override
     public EventEntity createEvent(CreateEventDTO createEventDTO, MultipartFile[] files) {
         EventEntity eventEntity = new EventEntity();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Long userId = (Long) authentication.getPrincipal();
+        System.out.println("user id is :::  "+ userId);
 
         // Set basic details
         eventEntity.setTitle(createEventDTO.getTitle());
@@ -66,7 +71,6 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         // Set other fields
         eventEntity.setVenue(createEventDTO.getVenue());
         eventEntity.setTags(createEventDTO.getTags());
-        eventEntity.setAttendance(createEventDTO.getAttendance());
 
         // Upload each image to Cloudinary and collect the URLs
         List<String> imageUrls = Arrays.stream(files)
@@ -84,7 +88,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         eventEntity.setImages(imageUrls);
 
         // Retrieve the OrganizerEntity based on organizerId from the DTO
-        OrganizerEntity organizer = organizerRepository.findById(createEventDTO.getOrganizerId())
+        OrganizerEntity organizer = organizerRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Organizer not found"));
         eventEntity.setOrganizer(organizer);
 
