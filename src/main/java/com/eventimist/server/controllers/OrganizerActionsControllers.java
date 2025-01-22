@@ -11,12 +11,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -31,14 +35,18 @@ public class OrganizerActionsControllers {
 
 
     @PostMapping("check")
-    public ResponseEntity<?> check(
-
-    ) throws InterruptedException{
-            log.info("excuting testing thread...........");
-            Thread.sleep(10000);
-        log.info("completed testing thread...........");
-        return new ResponseEntity<>("checking", HttpStatus.OK);
+    public ResponseEntity<?> check(@RequestPart("files") MultipartFile[] files) {
+        try {
+            // Collect all file names
+            List<String> fileNames = Arrays.stream(files)
+                    .map(MultipartFile::getOriginalFilename)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(fileNames, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error processing files", HttpStatus.BAD_REQUEST);
+        }
     }
+
 
 
     @PostMapping("create-event")
@@ -52,8 +60,8 @@ public class OrganizerActionsControllers {
 
     // get all events by organizer ID //
     @GetMapping("all-events")
-    public ResponseEntity<?> getAllEvents(@RequestParam Long organizerId) {
-        List<GetEventsResponseDTO> events = organizerActionsService.getEventsByOrganizerId(organizerId);
+    public ResponseEntity<?> getAllEvents() {
+        List<GetEventsResponseDTO> events = organizerActionsService.getEventsByOrganizerId();
         return new ResponseEntity<>(events, HttpStatus.OK);
     }
 

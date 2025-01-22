@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface OrganizerActionsService {
         EventEntity createEvent(CreateEventDTO createEventDTO , MultipartFile [] files);
-        List<GetEventsResponseDTO> getEventsByOrganizerId(Long organizerId);
+        List<GetEventsResponseDTO> getEventsByOrganizerId();
 }
