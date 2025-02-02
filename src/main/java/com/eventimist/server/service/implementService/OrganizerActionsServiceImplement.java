@@ -5,6 +5,8 @@ import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.UpdateProfileDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.entities.OrganizerEntity;
+import com.eventimist.server.exceptions.BadRequestException;
+import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.exceptions.ImageUploadException;
 import com.eventimist.server.repository.EventRepository;
 import com.eventimist.server.repository.OrganizerRepository;
@@ -22,10 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -150,6 +149,26 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         responseDTO.setLocation(organizer.getLocation());
 
         return responseDTO;
+    }
+
+    @Override
+    public String UpdateImage(MultipartFile file, String type) {
+        Set<String> allowedTypes = Set.of("profile", "cover");
+                if (!allowedTypes.contains(type)) {
+            throw new BadRequestException("Please provide type either 'profile' or 'cover'");
+        }
+        OrganizerEntity organizer = organizerRepository.findById(getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("Organizer not found"));
+
+         String imageUrl = cloudinaryService.CloudinaryImageUpload(file);
+
+         if ("profile".equals(type)) {
+            organizer.setProfile_pic(imageUrl);
+        } else {
+            organizer.setCover_image(imageUrl);
+        }
+        organizerRepository.save(organizer);
+        return imageUrl;
     }
 
 
