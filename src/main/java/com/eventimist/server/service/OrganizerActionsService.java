@@ -12,4 +12,5 @@ public interface OrganizerActionsService {
         EventEntity createEvent(CreateEventDTO createEventDTO , MultipartFile [] files);
         List<GetEventsResponseDTO> getEventsByOrganizerId();
         UpdateProfileDTO updateProfileInfo (UpdateProfileDTO updateProfileDTO);
+        String UpdateImage (MultipartFile file , String type);
 }
