@@ -78,6 +78,28 @@ public class OrganizerEntity {
     @Column(nullable = true)
     private String profile_pic;
 
+    public String getCover_image() {
+        return cover_image;
+    }
+
+    public void setCover_image(String cover_image) {
+        this.cover_image = cover_image;
+    }
+
+    @Column(nullable = true)
+    private String cover_image;
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    @Column(nullable = true)
+    private String location;
+
     @OneToMany(mappedBy = "organizer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventEntity> events;
 }
