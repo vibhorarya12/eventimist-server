@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -75,17 +76,16 @@ public class OrganizerActionsControllers {
 
     }
     @PatchMapping("update-image")
-    public ResponseEntity<?> updateImage(
+    public ResponseEntity<Map<String, String>> updateImage(
             @RequestPart("image") MultipartFile file,
-            @RequestPart("type") String type) {
+            @RequestParam("type") String type) {
 
-        try {
+        String imageUrl = organizerActionsService.UpdateImage(file, type);
 
-            return new ResponseEntity<>(type, HttpStatus.OK);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(Collections.singletonMap("imageUrl", imageUrl));
+
     }
+
 
 
 
