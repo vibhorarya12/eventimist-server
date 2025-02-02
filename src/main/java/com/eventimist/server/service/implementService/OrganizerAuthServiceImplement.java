@@ -54,6 +54,8 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
                 organizerLoginResponseDTO.setToken(jwtUtil.generateToken(organizer.getEmail(), organizer.getId() ));
                 organizerLoginResponseDTO.setBio(organizer.getBio());
                 organizerLoginResponseDTO.setProfilePic(organizer.getProfile_pic());
+                organizerLoginResponseDTO.setCoverImage(organizer.getCover_image());
+                organizerLoginResponseDTO.setLocation(organizer.getLocation());
                 return organizerLoginResponseDTO;
             } else {
 
