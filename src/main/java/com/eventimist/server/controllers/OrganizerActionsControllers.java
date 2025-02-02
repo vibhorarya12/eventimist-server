@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.TestingDTO;
+import com.eventimist.server.dto.organizerActionsDTO.UpdateProfileDTO;
 import com.eventimist.server.service.OrganizerActionsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +65,29 @@ public class OrganizerActionsControllers {
         List<GetEventsResponseDTO> events = organizerActionsService.getEventsByOrganizerId();
         return new ResponseEntity<>(events, HttpStatus.OK);
     }
+
+
+    @PatchMapping("update-profile-info")
+    public ResponseEntity<?> updateProfileInfo(@RequestBody UpdateProfileDTO updateProfileDTO){
+
+        UpdateProfileDTO responseDTO  = organizerActionsService.updateProfileInfo(updateProfileDTO);
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+
+    }
+    @PatchMapping("update-image")
+    public ResponseEntity<?> updateImage(
+            @RequestPart("image") MultipartFile file,
+            @RequestPart("type") String type) {
+
+        try {
+
+            return new ResponseEntity<>(type, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
 
     @PostMapping("upload")
     public ResponseEntity<?> uploadImage(@RequestParam("image") MultipartFile file) {
