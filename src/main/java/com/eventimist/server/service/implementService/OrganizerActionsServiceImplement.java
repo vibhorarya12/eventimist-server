@@ -2,6 +2,7 @@ package com.eventimist.server.service.implementService;
 
 import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
+import com.eventimist.server.dto.organizerActionsDTO.UpdateProfileDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.entities.OrganizerEntity;
 import com.eventimist.server.exceptions.ImageUploadException;
@@ -24,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -43,12 +45,21 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         this.cloudinaryService = cloudinaryService;
     }
 
+    private Authentication getAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    private Long getUserId() {
+        Object principal = getAuthentication().getPrincipal();
+        if (principal instanceof Long) {
+            return (Long) principal;
+        }
+        throw new IllegalStateException("Principal is not of type Long");
+    }
+
     @Override
     public EventEntity createEvent(CreateEventDTO createEventDTO, MultipartFile[] files) {
         EventEntity eventEntity = new EventEntity();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Long userId = (Long) authentication.getPrincipal();
-        System.out.println("user id is :::  "+ userId);
 
         // Set basic details
         eventEntity.setTitle(createEventDTO.getTitle());
@@ -88,7 +99,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         eventEntity.setImages(imageUrls);
 
         // Retrieve the OrganizerEntity based on organizerId from the DTO
-        OrganizerEntity organizer = organizerRepository.findById(userId)
+        OrganizerEntity organizer = organizerRepository.findById(getUserId())
                 .orElseThrow(() -> new RuntimeException("Organizer not found"));
         eventEntity.setOrganizer(organizer);
 
@@ -96,15 +107,51 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
     }
 
     @Override
-    public List<GetEventsResponseDTO> getEventsByOrganizerId(Long organizerId) {
+    public List<GetEventsResponseDTO> getEventsByOrganizerId() {
         // Fetch events for the given organizerId from the repository
-        List<EventEntity> events = eventRepository.findByOrganizerId(organizerId);
+
+        List<EventEntity> events = eventRepository.findByOrganizerId(getUserId());
 
         // Map each EventEntity to GetEventsResponseDTO
         return events.stream()
                 .map(this::mapToGetEventsResponseDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public UpdateProfileDTO updateProfileInfo(UpdateProfileDTO updateProfileDTO) {
+        Long userId = getUserId(); // Assume this retrieves the authenticated user's ID
+
+        Optional<OrganizerEntity> optionalOrganizer = organizerRepository.findById(userId);
+
+        if (optionalOrganizer.isEmpty()) {
+            throw new RuntimeException("Organizer not found");
+        }
+
+        OrganizerEntity organizer = optionalOrganizer.get();
+
+        // Update only non-null fields
+        if (updateProfileDTO.getName() != null) {
+            organizer.setName(updateProfileDTO.getName());
+        }
+        if (updateProfileDTO.getBio() != null) {
+            organizer.setBio(updateProfileDTO.getBio());
+        }
+        if (updateProfileDTO.getLocation() != null) {
+            organizer.setLocation(updateProfileDTO.getLocation());
+        }
+
+        organizerRepository.save(organizer);
+
+        // Return the updated values as DTO
+        UpdateProfileDTO responseDTO = new UpdateProfileDTO();
+        responseDTO.setName(organizer.getName());
+        responseDTO.setBio(organizer.getBio());
+        responseDTO.setLocation(organizer.getLocation());
+
+        return responseDTO;
+    }
+
 
     private GetEventsResponseDTO mapToGetEventsResponseDTO(EventEntity event) {
         GetEventsResponseDTO dto = new GetEventsResponseDTO();
