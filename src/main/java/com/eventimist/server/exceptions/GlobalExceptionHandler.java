@@ -65,5 +65,14 @@ public  ResponseEntity<ErrorResponse> handleJwtAuthException (JwtAuthException e
     errorResponse.setTimestamp(new Date());
     return  new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.UNAUTHORIZED);
 }
+@ExceptionHandler (BadRequestException.class)
+ public  ResponseEntity<ErrorResponse>handleBadRequestException(BadRequestException ex , WebRequest webRequest){
+    ErrorResponse errorResponse =  new ErrorResponse();
+    errorResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+    errorResponse.setMessage(ex.getMessage());
+    errorResponse.setTimestamp(new Date());
+    return  new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.BAD_REQUEST);
+}
+
 
 }
