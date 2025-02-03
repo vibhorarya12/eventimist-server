@@ -143,12 +143,9 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         organizerRepository.save(organizer);
 
         // Return the updated values as DTO
-        UpdateProfileDTO responseDTO = new UpdateProfileDTO();
-        responseDTO.setName(organizer.getName());
-        responseDTO.setBio(organizer.getBio());
-        responseDTO.setLocation(organizer.getLocation());
 
-        return responseDTO;
+
+        return updateProfileDTO;
     }
 
     @Override
