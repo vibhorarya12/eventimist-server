@@ -14,5 +14,7 @@ public class OrganizerRegisterResponseDTO {
     private String profilePic = "";
 
     private String token = "";
+    private  String coverImage;
 
+    private  String location;
 }
