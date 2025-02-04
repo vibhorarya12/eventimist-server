@@ -5,12 +5,15 @@ import com.eventimist.server.dto.organizerDTO.OrganizerRegisterDTO;
 import com.eventimist.server.dto.organizerDTO.OrganizerRegisterResponseDTO;
 import com.eventimist.server.service.OrganizerAuthService;
 import com.eventimist.server.utils.JwtUtil;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
-
+@Validated
 @RestController
 @RequestMapping("/api/auth/organizer")
 public class OrganizerAuthController {
@@ -19,7 +22,7 @@ public class OrganizerAuthController {
     private OrganizerAuthService organizerAuthService;
 
     @PostMapping("login")
-    public ResponseEntity<?> login(@RequestBody OrganizerLoginDTO organizerLoginDTO) {
+    public ResponseEntity<?> login(@Valid @RequestBody OrganizerLoginDTO organizerLoginDTO) {
 
         OrganizerLoginResponseDTO organizerLoginResponseDTO = organizerAuthService.organizerLogin(organizerLoginDTO);
         return new ResponseEntity<>(organizerLoginResponseDTO, HttpStatus.OK);
@@ -27,7 +30,7 @@ public class OrganizerAuthController {
     }
 
     @PostMapping("register")
-    public ResponseEntity<?> register(@RequestBody OrganizerRegisterDTO organizerRegisterDTO) {
+    public ResponseEntity<?> register(@Valid @RequestBody OrganizerRegisterDTO organizerRegisterDTO) {
 
         OrganizerRegisterResponseDTO organizerRegisterResponseDTO = organizerAuthService.registerOrganizer(organizerRegisterDTO);
 
@@ -36,7 +39,11 @@ public class OrganizerAuthController {
     }
 
     @GetMapping("/check-email")
-    public ResponseEntity<Map<String, Object>> checkEmail(@RequestParam String email) {
+    public ResponseEntity<Map<String, Object>> checkEmail(
+            @RequestParam(required = false)
+            @NotBlank(message = "Email must be provided")
+            String email
+    ) {
 
         // Call service to check email existence
         boolean emailExists = organizerAuthService.checkEmailExists(email);

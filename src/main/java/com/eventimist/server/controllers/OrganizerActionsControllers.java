@@ -6,6 +6,7 @@ import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.TestingDTO;
 import com.eventimist.server.dto.organizerActionsDTO.UpdateProfileDTO;
 import com.eventimist.server.service.OrganizerActionsService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -52,7 +53,7 @@ public class OrganizerActionsControllers {
 
 
     @PostMapping("create-event")
-    public ResponseEntity<?> createEvent(@ModelAttribute CreateEventDTO createEventDTO,
+    public ResponseEntity<?> createEvent(@Valid @ModelAttribute CreateEventDTO createEventDTO,
                                          @RequestPart("files") MultipartFile[] files) {
         organizerActionsService.createEvent(createEventDTO, files);
 
@@ -69,7 +70,7 @@ public class OrganizerActionsControllers {
 
 
     @PatchMapping("update-profile-info")
-    public ResponseEntity<?> updateProfileInfo(@RequestBody UpdateProfileDTO updateProfileDTO){
+    public ResponseEntity<?> updateProfileInfo(@Valid @RequestBody UpdateProfileDTO updateProfileDTO){
 
         UpdateProfileDTO responseDTO  = organizerActionsService.updateProfileInfo(updateProfileDTO);
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
