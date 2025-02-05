@@ -1,6 +1,5 @@
 package com.eventimist.server.service.implementService;
 
-import com.eventimist.server.dto.clerkResponseDTO.ClerkSessionResponseDTO;
 import com.eventimist.server.exceptions.ClerkAuthSessionException;
 import com.eventimist.server.service.ClerkAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +8,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class ClerkAuthServiceImplement implements ClerkAuthService {
@@ -19,47 +20,86 @@ public class ClerkAuthServiceImplement implements ClerkAuthService {
     @Autowired
     private RestTemplate restTemplate;
 
+    private final ObjectMapper objectMapper = new ObjectMapper(); // JSON Parser
+
     @Override
-    public boolean AuthenticateClerkSession(String clerkSessionId) {
-
+    public boolean AuthenticateClerkSession(String clerkSessionId, String email) {
         try {
-            // Construct the URL dynamically using the clerkSessionId
-            String url = "https://api.clerk.com/v1/sessions/" + clerkSessionId;
-
-            // Prepare headers
+            // Step 1: Fetch session details from Clerk API
+            String sessionUrl = "https://api.clerk.com/v1/sessions/" + clerkSessionId;
             HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(clerkToken); // Add Bearer token
-            HttpEntity<String> entity = new HttpEntity<>(headers); // Create HTTP entity
+            headers.setBearerAuth(clerkToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            // Make the GET request
-            ResponseEntity<ClerkSessionResponseDTO> response = restTemplate.exchange(
-                    url,
+            ResponseEntity<String> sessionResponse = restTemplate.exchange(
+                    sessionUrl,
                     HttpMethod.GET,
                     entity,
-                    ClerkSessionResponseDTO.class
+                    String.class
             );
 
-            // Check if response is valid and status is 'active'
-            if (response.getStatusCode() == HttpStatus.OK &&
-                    "active".equalsIgnoreCase(response.getBody().getStatus())) {
-                return true; // Valid session
+            if (sessionResponse.getStatusCode() != HttpStatus.OK) {
+                throw new ClerkAuthSessionException("Invalid session response");
             }
 
-            // Handle non-active session explicitly
-            throw new ClerkAuthSessionException("Session is not active");
+            // Parse JSON response to get user ID
+            JsonNode sessionJson = objectMapper.readTree(sessionResponse.getBody());
+            if (!"active".equalsIgnoreCase(sessionJson.path("status").asText())) {
+                throw new ClerkAuthSessionException("Session is not active");
+            }
+
+            String userId = sessionJson.path("user_id").asText();
+            if (userId.isEmpty()) {
+                throw new ClerkAuthSessionException("User ID not found in session");
+            }
+
+            // Step 2: Fetch user details from Clerk API
+            return validateUserEmail(userId, email);
 
         } catch (HttpClientErrorException e) {
-            // Handle specific HTTP errors
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new ClerkAuthSessionException("Session not found");
             } else if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                throw new ClerkAuthSessionException("Unauthorized request. Invalid API key or token.");
+                throw new ClerkAuthSessionException("Unauthorized request. Invalid API key.");
             }
-            throw new ClerkAuthSessionException("HTTP error occurred: " + e.getMessage());
+            throw new ClerkAuthSessionException("HTTP error: " + e.getMessage());
+        } catch (Exception e) {
+            throw new ClerkAuthSessionException("Unexpected error: " + e.getMessage());
+        }
+    }
+
+    private boolean validateUserEmail(String userId, String email) {
+        try {
+            String userUrl = "https://api.clerk.com/v1/users/" + userId;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(clerkToken);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<String> userResponse = restTemplate.exchange(
+                    userUrl,
+                    HttpMethod.GET,
+                    entity,
+                    String.class
+            );
+
+            if (userResponse.getStatusCode() != HttpStatus.OK) {
+                throw new ClerkAuthSessionException("Failed to fetch user details");
+            }
+
+            // Parse JSON response to verify email
+            JsonNode userJson = objectMapper.readTree(userResponse.getBody());
+            JsonNode emailAddresses = userJson.path("email_addresses");
+
+            for (JsonNode emailNode : emailAddresses) {
+                if (email.equalsIgnoreCase(emailNode.path("email_address").asText())) {
+                    return true;
+                }
+            }
+
+            throw new ClerkAuthSessionException("Email mismatch: session does not belong to provided email");
 
         } catch (Exception e) {
-            // Handle any other unexpected exceptions
-            throw new ClerkAuthSessionException("An unexpected error occurred: " + e.getMessage());
+            throw new ClerkAuthSessionException("Error fetching user details: " + e.getMessage());
         }
     }
 }

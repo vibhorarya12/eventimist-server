@@ -75,7 +75,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
     public OrganizerRegisterResponseDTO registerOrganizer(OrganizerRegisterDTO organizerRegisterDTO) {
 
         // Authenticate Clerk session
-        if (!clerkAuthService.AuthenticateClerkSession(organizerRegisterDTO.getClerkSessionId())) {
+        if (!clerkAuthService.AuthenticateClerkSession(organizerRegisterDTO.getClerkSessionId(),organizerRegisterDTO.getEmail())) {
             throw new ClerkAuthSessionException("Clerk session authentication failed || session is inactive.");
         }
 
