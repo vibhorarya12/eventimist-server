@@ -1,8 +1,5 @@
 package com.eventimist.server.controllers;
-import com.eventimist.server.dto.organizerDTO.OrganizerLoginDTO;
-import com.eventimist.server.dto.organizerDTO.OrganizerLoginResponseDTO;
-import com.eventimist.server.dto.organizerDTO.OrganizerRegisterDTO;
-import com.eventimist.server.dto.organizerDTO.OrganizerRegisterResponseDTO;
+import com.eventimist.server.dto.organizerDTO.*;
 import com.eventimist.server.service.OrganizerAuthService;
 import com.eventimist.server.utils.JwtUtil;
 import jakarta.validation.Valid;
@@ -35,6 +32,25 @@ public class OrganizerAuthController {
         OrganizerRegisterResponseDTO organizerRegisterResponseDTO = organizerAuthService.registerOrganizer(organizerRegisterDTO);
 
         return new ResponseEntity<>(organizerRegisterResponseDTO, HttpStatus.OK);
+
+    }
+
+    @PostMapping ("oauthRegister")
+    public ResponseEntity<?> oAUthRegister(@Valid @RequestBody OrganizerOauthRegisterDTO oauthRegisterDTO) {
+
+        OrganizerRegisterResponseDTO organizerRegisterResponseDTO = organizerAuthService.registerWithOauth(oauthRegisterDTO);
+
+        return new ResponseEntity<>(organizerRegisterResponseDTO, HttpStatus.OK);
+
+    }
+
+    @PostMapping ("oauthLogin")
+    public ResponseEntity<OrganizerLoginResponseDTO> oAUthLogin(@Valid @RequestBody OauthLoginRequestDTO oauthLoginRequestDTO) {
+
+
+        OrganizerLoginResponseDTO responseDTO = organizerAuthService.loginWithOauth(oauthLoginRequestDTO);
+
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
 
     }
 
