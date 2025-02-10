@@ -154,7 +154,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
 
         }
         else {
-            throw  new EntityNotFoundException("organizer not found");
+            throw  new EntityNotFoundException("organizer not found , please register first !!");
         }
 
 
