@@ -1,15 +1,10 @@
 package com.eventimist.server.service.implementService;
 
-import com.eventimist.server.dto.userDTO.UserLoginDTO;
-import com.eventimist.server.dto.userDTO.UserLoginResponseDTO;
-import com.eventimist.server.dto.userDTO.UserRegisterDTO;
-import com.eventimist.server.dto.userDTO.UserRegisterResponseDTO;
+import com.eventimist.server.dto.userDTO.*;
 import com.eventimist.server.entities.UserEntity;
-import com.eventimist.server.exceptions.CustomException;
-import com.eventimist.server.exceptions.EntityNotFoundException;
-import com.eventimist.server.exceptions.ExistingEntityException;
-import com.eventimist.server.exceptions.WrongCredentialsException;
+import com.eventimist.server.exceptions.*;
 import com.eventimist.server.repository.UserRepository;
+import com.eventimist.server.service.ClerkAuthService;
 import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +27,10 @@ public class UserAuthServiceImplement implements UserAuthService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
+
+    @Autowired
+    private ClerkAuthService clerkAuthService;
+
 
     @Override
     public UserRegisterResponseDTO registerUser(UserRegisterDTO userRegisterDTO) {
@@ -72,6 +71,30 @@ public class UserAuthServiceImplement implements UserAuthService {
             throw  new EntityNotFoundException("User not found");
         }
     }
+
+    @Override
+    public UserLoginResponseDTO loginWithOauth(UserOauthLoginDTO userOauthLoginDTO){
+            if(!clerkAuthService.AuthenticateClerkSession(userOauthLoginDTO.getClerkSessionId(), userOauthLoginDTO.getEmail())){
+                throw new ClerkAuthSessionException("Clerk session authentication failed || session is inactive");
+            }
+            Optional<UserEntity> UserOptional = userRepository.findByEmail(userOauthLoginDTO.getEmail());
+            if(UserOptional.isPresent()){
+                UserEntity userEntity = UserOptional.get();
+                UserLoginResponseDTO userLoginResponseDTO = new UserLoginResponseDTO();
+                userLoginResponseDTO.setToken(jwtUtil.generateToken(userEntity.getEmail(), userEntity.getId()));
+                userLoginResponseDTO.setEmail(userEntity.getEmail());
+                userLoginResponseDTO.setName(userEntity.getName());
+                userLoginResponseDTO.setProfilePic(userEntity.getProfilePic());
+
+                return userLoginResponseDTO;
+
+            }
+            else {
+                throw  new EntityNotFoundException("User not found");
+            }
+
+    }
+
 
     private UserEntity mapDtoToEntity(UserRegisterDTO userRegisterDTO) {
         UserEntity user = new UserEntity();
