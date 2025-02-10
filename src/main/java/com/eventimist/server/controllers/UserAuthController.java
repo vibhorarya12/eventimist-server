@@ -1,12 +1,10 @@
 package com.eventimist.server.controllers;
 
 
-import com.eventimist.server.dto.userDTO.UserLoginDTO;
-import com.eventimist.server.dto.userDTO.UserLoginResponseDTO;
-import com.eventimist.server.dto.userDTO.UserRegisterDTO;
-import com.eventimist.server.dto.userDTO.UserRegisterResponseDTO;
+import com.eventimist.server.dto.userDTO.*;
 import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,8 +30,16 @@ public class UserAuthController {
 
     }
 
+
+    @PostMapping("oauthLogin")
+    public ResponseEntity<?> oauthLogin (@Valid @RequestBody UserOauthLoginDTO userOauthLoginDTO){
+                UserLoginResponseDTO userLoginResponseDTO = userAuthService.loginWithOauth(userOauthLoginDTO);
+                return  new ResponseEntity<>(userLoginResponseDTO, HttpStatus.OK);
+    }
+
+
     @PostMapping("login")
-    public  ResponseEntity<?>login(@RequestBody UserLoginDTO userLoginDTO){
+    public  ResponseEntity<?>login(@Valid @RequestBody UserLoginDTO userLoginDTO){
 
            UserLoginResponseDTO userLoginResponseDTO = userAuthService.loginUser(userLoginDTO);
             return  new ResponseEntity<>(userLoginResponseDTO, HttpStatus.OK);
