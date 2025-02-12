@@ -7,6 +7,7 @@ import com.eventimist.server.repository.UserRepository;
 import com.eventimist.server.service.ClerkAuthService;
 import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
+import com.eventimist.server.utils.PasswordGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,6 +32,9 @@ public class UserAuthServiceImplement implements UserAuthService {
     @Autowired
     private ClerkAuthService clerkAuthService;
 
+    @Autowired
+    private PasswordGenerator passwordGenerator;
+
 
     @Override
     public UserRegisterResponseDTO registerUser(UserRegisterDTO userRegisterDTO) {
@@ -42,7 +46,7 @@ public class UserAuthServiceImplement implements UserAuthService {
         UserEntity user = mapDtoToEntity(userRegisterDTO);
         String encodedPassword = passwordEncoder.encode(userRegisterDTO.getPassword());
         user.setPassword(encodedPassword);
-       Long userId = userRepository.save(user).getId();
+        Long userId = userRepository.save(user).getId();
         userRegisterResponseDTO.setEmail(userRegisterDTO.getEmail());
         userRegisterResponseDTO.setName(userRegisterDTO.getName());
         userRegisterResponseDTO.setToken(jwtUtil.generateToken(userRegisterDTO.getEmail(), userId));
@@ -71,6 +75,35 @@ public class UserAuthServiceImplement implements UserAuthService {
             throw  new EntityNotFoundException("User not found");
         }
     }
+
+    @Override
+    public  UserRegisterResponseDTO registerWithOauth (UserOauthRegisterDTO userOauthRegisterDTO){
+        if(!clerkAuthService.AuthenticateClerkSession(userOauthRegisterDTO.getClerkSessionId(), userOauthRegisterDTO.getEmail())){
+            throw new ClerkAuthSessionException("Clerk session authentication failed || session is inactive");
+        }
+        if(checkEmailExists(userOauthRegisterDTO.getEmail())){
+            throw new ExistingEntityException("User with this email already exists");
+        }
+        UserEntity user = new UserEntity();
+        user.setName(userOauthRegisterDTO.getName());
+        user.setEmail(userOauthRegisterDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(passwordGenerator.generateStrongPassword(12)));
+        user.setProfilePic(userOauthRegisterDTO.getProfilePic());
+
+        long userId  = userRepository.save(user).getId();
+        UserRegisterResponseDTO response = new UserRegisterResponseDTO();
+        response.setToken(jwtUtil.generateToken(userOauthRegisterDTO.getEmail(), userId));
+        response.setName(userOauthRegisterDTO.getName());
+        response.setEmail(userOauthRegisterDTO.getEmail());
+        response.setProfilePic(userOauthRegisterDTO.getProfilePic());
+
+        return  response;
+
+
+    }
+
+
+
 
     @Override
     public UserLoginResponseDTO loginWithOauth(UserOauthLoginDTO userOauthLoginDTO){
