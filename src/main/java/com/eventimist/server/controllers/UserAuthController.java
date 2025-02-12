@@ -31,6 +31,13 @@ public class UserAuthController {
     }
 
 
+    @PostMapping("oauthRegister")
+    public ResponseEntity<UserRegisterResponseDTO> oauthRegister (@Valid @RequestBody UserOauthRegisterDTO userOauthRegisterDTO){
+         UserRegisterResponseDTO  response = userAuthService.registerWithOauth(userOauthRegisterDTO);
+        return new ResponseEntity<UserRegisterResponseDTO>(response , HttpStatus.OK);
+    }
+
+
     @PostMapping("oauthLogin")
     public ResponseEntity<?> oauthLogin (@Valid @RequestBody UserOauthLoginDTO userOauthLoginDTO){
                 UserLoginResponseDTO userLoginResponseDTO = userAuthService.loginWithOauth(userOauthLoginDTO);
