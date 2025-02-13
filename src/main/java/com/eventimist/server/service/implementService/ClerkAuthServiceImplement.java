@@ -2,6 +2,8 @@ package com.eventimist.server.service.implementService;
 
 import com.eventimist.server.exceptions.ClerkAuthSessionException;
 import com.eventimist.server.service.ClerkAuthService;
+import org.cloudinary.json.JSONArray;
+import org.cloudinary.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -10,6 +12,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.Optional;
 
 @Service
 public class ClerkAuthServiceImplement implements ClerkAuthService {
@@ -67,6 +71,74 @@ public class ClerkAuthServiceImplement implements ClerkAuthService {
             throw new ClerkAuthSessionException("Unexpected error: " + e.getMessage());
         }
     }
+
+
+
+    @Override
+    public boolean deleteExistingClerkUser (String email){
+        Optional<String> userIdOptional = retrieveClerkUser(email);
+
+        if (userIdOptional.isEmpty()) {
+//            System.out.println("no user found in clerk db <<<<<<<<<<<<<<<");
+            return false;
+        }
+
+//        System.out.println("Proceeding to delete <<<<<<<<<<<<<<<");
+        String userId = userIdOptional.get();
+        String deleteUserUrl = "https://api.clerk.dev/v1/users/" + userId;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(clerkToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<Void> response = restTemplate.exchange(
+                deleteUserUrl,
+                HttpMethod.DELETE,
+                entity,
+                Void.class
+        );
+        return response.getStatusCode() == HttpStatus.NO_CONTENT;
+
+    }
+
+
+
+
+
+// helpers ///
+
+    public Optional<String> retrieveClerkUser(String email) {
+        System.out.println("Retreiving clerk user frm email <<<<<<<<<<<<<<<");
+        String getUserUrl = "https://api.clerk.dev/v1/users?email_address=" + email;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(clerkToken);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                getUserUrl,
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        if (response.getStatusCode() != HttpStatus.OK) {
+            throw new ClerkAuthSessionException("Clerk user authentication failed");
+        }
+
+        JSONArray usersArray = new JSONArray(response.getBody());
+        if (usersArray.length()==0) {
+            return Optional.empty();
+        }
+
+        JSONObject user = usersArray.getJSONObject(0);
+        return Optional.of(user.getString("id"));
+    }
+
+
+
 
     private boolean validateUserEmail(String userId, String email) {
         try {
