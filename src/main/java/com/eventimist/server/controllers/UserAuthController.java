@@ -2,6 +2,8 @@ package com.eventimist.server.controllers;
 
 
 import com.eventimist.server.dto.userDTO.*;
+import com.eventimist.server.exceptions.ExistingEntityException;
+import com.eventimist.server.service.ClerkAuthService;
 import com.eventimist.server.service.UserAuthService;
 import com.eventimist.server.utils.JwtUtil;
 import jakarta.validation.Valid;
@@ -17,6 +19,9 @@ import java.util.Map;
 public class UserAuthController {
     @Autowired
     private UserAuthService userAuthService;
+
+    @Autowired
+    private  ClerkAuthService clerkAuthService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -52,25 +57,27 @@ public class UserAuthController {
             return  new ResponseEntity<>(userLoginResponseDTO, HttpStatus.OK);
     }
 
-    @PostMapping("check-email")
-    public ResponseEntity<?> checkEmail(@RequestBody Map<String, String> requestBody) {
-        String email = requestBody.get("email");
 
-        if (email == null || email.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Email is required"));
-        }
-
-        // Remove any leading/trailing whitespace and convert to lowercase
-        email = email.trim().toLowerCase();
-
-        boolean emailExists = userAuthService.checkEmailExists(email);
-
-        if (emailExists) {
-            return ResponseEntity.ok(Map.of("message", "Email exists", "exists", true));
-        } else {
-            return ResponseEntity.ok(Map.of("message", "Email not found", "exists", false));
-        }
+    @GetMapping("clerk-user")
+    public  ResponseEntity<?>clerkUser(@RequestParam String email){
+        boolean res  = clerkAuthService.deleteExistingClerkUser(email);
+        return new ResponseEntity<>(res,HttpStatus.OK);
     }
+
+
+    @GetMapping("check-email")
+    public ResponseEntity<?> checkEmail(@RequestParam String email) {
+        boolean isPresent = userAuthService.checkEmailExists(email);
+        if(isPresent){
+          throw new ExistingEntityException("user with this email already exists");
+        }
+        else {
+            clerkAuthService.deleteExistingClerkUser(email);
+        }
+        return  new ResponseEntity<>(isPresent, HttpStatus.OK);
+
+    }
+
 
 
 }
