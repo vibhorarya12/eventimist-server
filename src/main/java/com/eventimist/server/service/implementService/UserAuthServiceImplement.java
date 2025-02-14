@@ -38,9 +38,13 @@ public class UserAuthServiceImplement implements UserAuthService {
 
     @Override
     public UserRegisterResponseDTO registerUser(UserRegisterDTO userRegisterDTO) {
+        if(!clerkAuthService.AuthenticateClerkSession(userRegisterDTO.getClerkSessionId(), userRegisterDTO.getEmail())){
+            throw new ClerkAuthSessionException("Clerk session authentication failed || session is inactive.");
+        }
         if(checkEmailExists(userRegisterDTO.getEmail())){
             throw new ExistingEntityException("User with this email already exists");
         }
+
 
         UserRegisterResponseDTO userRegisterResponseDTO = new UserRegisterResponseDTO();
         UserEntity user = mapDtoToEntity(userRegisterDTO);
