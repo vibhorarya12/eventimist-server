@@ -16,7 +16,7 @@ public class CloudinaryServiceImplement implements CloudinaryService {
     @Autowired
     private Cloudinary cloudinary;
 
-    @Override
+    @Override 
     public String CloudinaryImageUpload (MultipartFile file){
 
         try{

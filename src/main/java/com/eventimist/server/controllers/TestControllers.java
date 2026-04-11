@@ -1,5 +1,6 @@
 package com.eventimist.server.controllers;
 
+import com.eventimist.server.exceptions.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,12 +13,7 @@ public class TestControllers {
 
     @GetMapping("/test")
     public ResponseEntity<String> test (){
-        try{
-            return new ResponseEntity<>("success" , HttpStatus.OK);
-        }
-        catch (Exception e){
-            return new ResponseEntity<>("aunauth", HttpStatus.UNAUTHORIZED);
-        }
+        throw new EntityNotFoundException("not found bhai");
 
     }
 }
