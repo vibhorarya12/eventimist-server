@@ -1,6 +1,7 @@
 package com.eventimist.server.service;
 
 import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
+import com.eventimist.server.dto.organizerActionsDTO.EditEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.UpdateProfileDTO;
 import com.eventimist.server.entities.EventEntity;
@@ -13,4 +14,7 @@ public interface OrganizerActionsService {
         List<GetEventsResponseDTO> getEventsByOrganizerId();
         UpdateProfileDTO updateProfileInfo (UpdateProfileDTO updateProfileDTO);
         String UpdateImage (MultipartFile file , String type);
+        public EventEntity updateEvent(Long id, EditEventDTO dto);
+        public void publishEvent(Long eventId);
+
 }
