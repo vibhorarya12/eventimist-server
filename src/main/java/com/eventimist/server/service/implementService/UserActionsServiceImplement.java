@@ -85,9 +85,9 @@ public class UserActionsServiceImplement implements UserActionsService {
                     EventsResponseDTO dto = new EventsResponseDTO();
                     dto.setId(event.getId());
                     dto.setTitle(event.getTitle());
-                    dto.setType(event.getType());
+//                    dto.setType(event.getType());
                     dto.setDescription(event.getDescription());
-                    dto.setDate(event.getDate());
+//                    dto.setDate(event.getDate());
                     dto.setVenue(event.getVenue());
                     dto.setImages(event.getImages());
                     dto.setAttendance(event.getAttendance());
@@ -114,9 +114,9 @@ public class UserActionsServiceImplement implements UserActionsService {
                     EventsResponseDTO dto = new EventsResponseDTO();
                     dto.setId(event.getId());
                     dto.setTitle(event.getTitle());
-                    dto.setType(event.getType());
+//                    dto.setType(event.getType());
                     dto.setDescription(event.getDescription());
-                    dto.setDate(event.getDate());
+//                    dto.setDate(event.getDate());
                     dto.setVenue(event.getVenue());
                     dto.setAttendance(event.getAttendance());
                     dto.setImages(event.getImages());
@@ -165,9 +165,9 @@ public class UserActionsServiceImplement implements UserActionsService {
         // Set values using the setter methods
         eventsResponseDTO.setId(event.getId());
         eventsResponseDTO.setTitle(event.getTitle());
-        eventsResponseDTO.setType(event.getType());
+//        eventsResponseDTO.setType(event.getType());
         eventsResponseDTO.setDescription(event.getDescription());
-        eventsResponseDTO.setDate(event.getDate());
+//        eventsResponseDTO.setDate(event.getDate());
         eventsResponseDTO.setVenue(event.getVenue());
 //        eventsResponseDTO.setTags(event.getTags());
         eventsResponseDTO.setLatitude(location.getY());
