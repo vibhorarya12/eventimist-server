@@ -1,4 +1,7 @@
 package com.eventimist.server.enums;
 
-public class EventMode {
+public enum EventMode {
+    ONLINE,
+    OFFLINE,
+    HYBRID
 }
