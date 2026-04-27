@@ -1,5 +1,6 @@
 package com.eventimist.server.controllers;
 import com.eventimist.server.dto.organizerDTO.*;
+import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.service.OrganizerAuthService;
 import com.eventimist.server.utils.JwtUtil;
 import jakarta.validation.Valid;
@@ -71,6 +72,14 @@ public class OrganizerAuthController {
         }
     }
 
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test (){
+
+
+        throw new EntityNotFoundException("not found bhai");
+
+    }
 
 }
 
