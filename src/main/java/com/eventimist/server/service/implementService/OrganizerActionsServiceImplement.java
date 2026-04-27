@@ -1,10 +1,12 @@
 package com.eventimist.server.service.implementService;
 
 import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
+import com.eventimist.server.dto.organizerActionsDTO.EditEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.UpdateProfileDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.entities.OrganizerEntity;
+import com.eventimist.server.enums.EventStatus;
 import com.eventimist.server.exceptions.BadRequestException;
 import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.exceptions.ImageUploadException;
@@ -24,7 +26,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -57,60 +63,255 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
     }
 
     @Override
-    public EventEntity createEvent(CreateEventDTO createEventDTO, MultipartFile[] files) {
-        EventEntity eventEntity = new EventEntity();
+    public EventEntity createEvent(CreateEventDTO dto, MultipartFile[] files) {
 
-        // Set basic details
-        eventEntity.setTitle(createEventDTO.getTitle());
-        eventEntity.setType(createEventDTO.getType());
-        eventEntity.setDescription(createEventDTO.getDescription());
+        EventEntity event = new EventEntity();
 
-        // Handle date from string to Date object
-        try {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-            Date parsedDate = dateFormat.parse(createEventDTO.getDate());
-            eventEntity.setDate(parsedDate);
-        } catch (ParseException e) {
-            throw new RuntimeException("Invalid date format", e);
+        // ---------------- Core Info ----------------
+        event.setTitle(dto.getTitle());
+        event.setDescription(dto.getDescription());
+        event.setCategory(dto.getCategory());
+
+        // ---------------- Time ----------------
+        event.setStartTime(dto.getStartTime());
+        event.setEndTime(dto.getEndTime());
+        event.setTimezone(dto.getTimezone());
+
+        // ---------------- Mode & Validation ----------------
+        event.setMode(dto.getMode());
+
+        switch (dto.getMode()) {
+            case ONLINE:
+                if (dto.getOnlineLink() == null || dto.getOnlineLink().isBlank()) {
+                    throw new RuntimeException("Online link is required for ONLINE events");
+                }
+                break;
+
+            case OFFLINE:
+                if (dto.getVenue() == null || dto.getVenue().isBlank()) {
+                    throw new RuntimeException("Venue is required for OFFLINE events");
+                }
+                break;
+
+            case HYBRID:
+                if (dto.getVenue() == null || dto.getVenue().isBlank()
+                        || dto.getOnlineLink() == null || dto.getOnlineLink().isBlank()) {
+                    throw new RuntimeException("Both venue and online link are required for HYBRID events");
+                }
+                break;
         }
 
-        // Set location as a Point object
-        Point location = geometryFactory.createPoint(new Coordinate(createEventDTO.getLongitude(), createEventDTO.getLatitude()));
-        eventEntity.setLocation(location);
+        event.setVenue(dto.getVenue());
+        event.setOnlineLink(dto.getOnlineLink());
 
-        // Set other fields
-        eventEntity.setVenue(createEventDTO.getVenue());
-        eventEntity.setTags(createEventDTO.getTags());
+        // ---------------- Location ----------------
+        Point location = geometryFactory.createPoint(
+                new Coordinate(dto.getLongitude(), dto.getLatitude())
+        );
+        event.setLocation(location);
 
-        // Upload each image to Cloudinary and collect the URLs
-        List<String> imageUrls = Arrays.stream(files)
-                .map(file -> {
-                    try {
-                        // Upload the file and get the URL
-                        return cloudinaryService.CloudinaryImageUpload(file);
-                    } catch (Exception e) {
-                        throw new ImageUploadException("Failed to upload image");
-                    }
-                })
-                .collect(Collectors.toList());
 
-        // Set the list of image URLs in the event entity
-        eventEntity.setImages(imageUrls);
+        // ---------------- Media ----------------
+        List<String> imageUrls = new ArrayList<>();
+        if (files.length > 5) {
+            throw new RuntimeException("Maximum 5 images allowed");
+        }
+        if (files != null && files.length > 0) {
 
-        // Retrieve the OrganizerEntity based on organizerId from the DTO
+            int threadCount = Math.min(files.length, 5);
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+
+            try {
+                List<CompletableFuture<String>> futures = Arrays.stream(files)
+                        .map(file -> CompletableFuture.supplyAsync(() -> {
+                            try {
+                                return cloudinaryService.CloudinaryImageUpload(file);
+                            } catch (Exception e) {
+                                throw new ImageUploadException("Failed to upload image");
+                            }
+                        }, executor))
+                        .toList();
+
+                imageUrls = futures.stream()
+                        .map(CompletableFuture::join) // wait for all uploads
+                        .toList();
+
+            } finally {
+                executor.shutdown(); // ⚠️ very important
+            }
+        }
+
+        event.setImages(imageUrls);
+
+// Optional: first image as cover
+        if (!imageUrls.isEmpty()) {
+            event.setCoverImage(imageUrls.get(0));
+        }
+        // ---------------- Discovery ----------------
+        event.setTags(dto.getTags());
+
+        // TODO: generate slug (you can implement later)
+        // event.setSlug(generateSlug(dto.getTitle()));
+
+        // ---------------- Ticketing ----------------
+        event.setCapacity(dto.getCapacity());
+//        event.setTicketPrice(dto.getTicketPrice());
+//        event.setIsFree(dto.getIsFree());
+
+        // ---------------- Lifecycle ----------------
+
+        event.setStatus(EventStatus.DRAFT);
+        event.setCreatedAt(LocalDateTime.now());
+        event.setUpdatedAt(LocalDateTime.now());
+
+        // ---------------- Organizer ----------------
         OrganizerEntity organizer = organizerRepository.findById(getUserId())
                 .orElseThrow(() -> new RuntimeException("Organizer not found"));
-        eventEntity.setOrganizer(organizer);
 
-        return eventRepository.save(eventEntity);
+        event.setOrganizer(organizer);
+
+        return eventRepository.save(event);
     }
+
+
+
+    @Override
+    public EventEntity updateEvent(Long id, EditEventDTO dto) {
+
+        // 1️⃣ Fetch existing event
+        EventEntity event = eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        // 2️⃣ Validate organizer ownership
+        if (event.getOrganizer().getId() != getUserId()) {
+            throw new RuntimeException("Unauthorized to edit this event");
+        }
+
+        // 3️⃣ Basic fields
+        event.setTitle(dto.getTitle());
+        event.setDescription(dto.getDescription());
+        event.setCategory(dto.getCategory());
+
+        // 4️⃣ Time
+        event.setStartTime(dto.getStartTime());
+        event.setEndTime(dto.getEndTime());
+        event.setTimezone(dto.getTimezone());
+
+        // 5️⃣ Mode & Location
+        event.setMode(dto.getMode());
+        event.setVenue(dto.getVenue());
+        event.setOnlineLink(dto.getOnlineLink());
+
+        Point location = geometryFactory.createPoint(
+                new Coordinate(dto.getLongitude(), dto.getLatitude())
+        );
+        event.setLocation(location);
+
+        // 6️⃣ Tags
+        if (dto.getTags() != null) {
+            event.setTags(
+                    dto.getTags().stream()
+                            .map(tag -> tag.toLowerCase().trim())
+                            .collect(Collectors.toList())
+            );
+        }
+
+        // 7️⃣ Ticketing
+        event.setCapacity(dto.getCapacity());
+        event.setIsFree(dto.getIsFree());
+
+        if (Boolean.FALSE.equals(dto.getIsFree())) {
+            event.setTicketPrice(dto.getTicketPrice());
+        } else {
+            event.setTicketPrice(null);
+        }
+
+        // 8️⃣ Images (clean call)
+        handleImages(event, dto);
+
+
+        // 9️⃣ Timestamp
+        event.setUpdatedAt(LocalDateTime.now());
+
+        // 🔟 Save
+        return eventRepository.save(event);
+    }
+
+
+    private void handleImages(EventEntity event, EditEventDTO dto) {
+
+        // 👉 Check if user even wants to update images
+        boolean hasExisting = dto.getExistingImages() != null;
+        boolean hasNew = dto.getNewImages() != null && dto.getNewImages().length > 0;
+
+        if (!hasExisting && !hasNew) {
+            return; // ✅ no change
+        }
+
+        // 👉 Step 1: Calculate counts
+        int existingCount = hasExisting
+                ? dto.getExistingImages().size()
+                : event.getImages().size();
+
+        int newCount = hasNew
+                ? dto.getNewImages().length
+                : 0;
+
+        // 👉 Step 2: Validate limit
+        if (existingCount + newCount > 5) {
+            throw new RuntimeException("Maximum 5 images allowed");
+        }
+
+        // 👉 Step 3: Prepare final list
+        List<String> finalImages = new ArrayList<>();
+
+        // retain existing
+        if (hasExisting) {
+            finalImages.addAll(dto.getExistingImages());
+        } else {
+            finalImages.addAll(event.getImages());
+        }
+
+        // 👉 Step 4: Upload new images
+        if (hasNew) {
+            List<String> newUrls = Arrays.stream(dto.getNewImages()).parallel()
+                    .map(file -> {
+                        try {
+                            return cloudinaryService.CloudinaryImageUpload(file);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Image upload failed");
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            finalImages.addAll(newUrls);
+        }
+
+        // 👉 8️⃣ FIX: Sync cover image (ADD HERE)
+        if (finalImages == null || finalImages.isEmpty()) {
+            event.setCoverImage(null);
+        } else {
+            if (event.getCoverImage() == null || !finalImages.contains(event.getCoverImage())) {
+                event.setCoverImage(finalImages.get(0));
+            }
+        }
+        // 👉 Step 5: Update entity
+        event.setImages(finalImages);
+    }
+
+
+
+
 
     @Override
     public List<GetEventsResponseDTO> getEventsByOrganizerId() {
         // Fetch events for the given organizerId from the repository
 
         List<EventEntity> events = eventRepository.findByOrganizerId(getUserId());
-
+        // Return empty list instead of null (safe default)
+        if (events == null || events.isEmpty()) {
+            return List.of();
+        }
         // Map each EventEntity to GetEventsResponseDTO
         return events.stream()
                 .map(this::mapToGetEventsResponseDTO)
@@ -169,26 +370,166 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
     }
 
 
+    // publish events
+    @Override
+    public void publishEvent(Long eventId) {
+        LocalDateTime now = LocalDateTime.now();
+        // 1️⃣ Fetch event
+        EventEntity event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+
+        if (!Objects.equals(event.getOrganizer().getId(), getUserId())) {
+            throw new RuntimeException("Unauthorized to publish this event");
+        }
+
+
+// Event completely in past
+        if (event.getEndTime().isBefore(now)) {
+            throw new RuntimeException("Cannot publish an event that has already ended");
+        }
+
+// Invalid time range
+        if (event.getStartTime().isAfter(event.getEndTime())) {
+            throw new RuntimeException("Start time cannot be after end time");
+        }
+
+        // 3️⃣ Already published check
+        if (event.getStatus() == EventStatus.PUBLISHED) {
+            throw new RuntimeException("Event is already published");
+        }
+
+        // 4️⃣ VALIDATIONS 🔥
+
+        if (event.getTitle() == null || event.getTitle().isBlank()) {
+            throw new RuntimeException("Title is required");
+        }
+
+        if (event.getDescription() == null || event.getDescription().isBlank()) {
+            throw new RuntimeException("Description is required");
+        }
+
+        if (event.getCategory() == null) {
+            throw new RuntimeException("Category is required");
+        }
+
+        if (event.getStartTime() == null || event.getEndTime() == null) {
+            throw new RuntimeException("Start and End time are required");
+        }
+
+        if (event.getMode() == null) {
+            throw new RuntimeException("Event mode is required");
+        }
+
+        // Mode-based validation
+        switch (event.getMode()) {
+            case ONLINE:
+                if (event.getOnlineLink() == null || event.getOnlineLink().isBlank()) {
+                    throw new RuntimeException("Online link is required for ONLINE events");
+                }
+                break;
+
+            case OFFLINE:
+                if (event.getVenue() == null || event.getVenue().isBlank()) {
+                    throw new RuntimeException("Venue is required for OFFLINE events");
+                }
+                if (event.getLocation() == null) {
+                    throw new RuntimeException("Location is required for OFFLINE events");
+                }
+                break;
+
+            case HYBRID:
+                if (event.getVenue() == null || event.getVenue().isBlank()
+                        || event.getOnlineLink() == null || event.getOnlineLink().isBlank()) {
+                    throw new RuntimeException("Both venue and online link are required for HYBRID events");
+                }
+                break;
+        }
+
+        // Images validation
+        if (event.getImages() == null || event.getImages().isEmpty()) {
+            throw new RuntimeException("At least one image is required");
+        }
+
+        // Ticketing validation
+        if (event.getCapacity() == null || event.getCapacity() <= 0) {
+            throw new RuntimeException("Valid capacity is required");
+        }
+
+        if (Boolean.FALSE.equals(event.getIsFree())) {
+            if (event.getTicketPrice() == null || event.getTicketPrice().doubleValue() <= 0) {
+                throw new RuntimeException("Ticket price must be set for paid events");
+            }
+        }
+
+        // 5️⃣ Generate slug (basic version)
+        String slug = event.getTitle()
+                .toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("(^-|-$)", "");
+
+        event.setSlug(slug);
+
+        // 6️⃣ Update status
+        event.setStatus(EventStatus.PUBLISHED);
+        event.setPublishedAt(LocalDateTime.now());
+        event.setUpdatedAt(LocalDateTime.now());
+
+        // 7️⃣ Save
+        eventRepository.save(event);
+    }
+
+
     private GetEventsResponseDTO mapToGetEventsResponseDTO(EventEntity event) {
+
         GetEventsResponseDTO dto = new GetEventsResponseDTO();
 
-        // Set basic details
+        // ---------------- Basic Info ----------------
         dto.setId(event.getId());
         dto.setTitle(event.getTitle());
-        dto.setType(event.getType());
         dto.setDescription(event.getDescription());
-        dto.setDate(event.getDate());
+        dto.setCategory(event.getCategory());
+
+        // ---------------- Time ----------------
+        dto.setStartTime(event.getStartTime());
+        dto.setEndTime(event.getEndTime());
+        dto.setTimezone(event.getTimezone());
+
+        // ---------------- Location & Mode ----------------
+        dto.setMode(event.getMode());
         dto.setVenue(event.getVenue());
-        dto.setTags(event.getTags());
+        dto.setOnlineLink(event.getOnlineLink());
 
-        // Set location coordinates from Point object
-        dto.setLatitude(event.getLocation().getY()); // Latitude is Y coordinate
-        dto.setLongitude(event.getLocation().getX()); // Longitude is X coordinate
-        System.out.println(event.getLocation());
+        // Point → lat/lng (safe)
+        if (event.getLocation() != null) {
+            dto.setLatitude(event.getLocation().getY());
+            dto.setLongitude(event.getLocation().getX());
+        }
 
-        // Set other fields
-        dto.setImages(event.getImages());
+        // ---------------- Media (NULL SAFE) ----------------
+        dto.setCoverImage(event.getCoverImage());
+
+        dto.setImages(
+                event.getImages() != null ? event.getImages() : List.of()
+        );
+
+        // ---------------- Discovery (NULL SAFE) ----------------
+        dto.setTags(
+                event.getTags() != null ? event.getTags() : List.of()
+        );
+
+        dto.setSlug(event.getSlug());
+
+        // ---------------- Ticketing ----------------
+        dto.setCapacity(event.getCapacity());
+        dto.setTicketPrice(event.getTicketPrice());
+        dto.setIsFree(event.getIsFree());
+
+        // ---------------- Lifecycle ----------------
+        dto.setStatus(event.getStatus());
+
+        // ---------------- Engagement ----------------
         dto.setAttendance(event.getAttendance());
+        dto.setRsvpCount(event.getRsvpCount());
 
         return dto;
     }
