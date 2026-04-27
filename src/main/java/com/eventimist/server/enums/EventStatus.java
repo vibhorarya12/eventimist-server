@@ -1,4 +1,9 @@
 package com.eventimist.server.enums;
 
-public class EventStatus {
+public enum EventStatus {
+    DRAFT,
+    PUBLISHED,
+    LIVE,
+    ENDED,
+    CANCELLED
 }
