@@ -1,10 +1,8 @@
 package com.eventimist.server.controllers;
 
 import com.cloudinary.Cloudinary;
-import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
-import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
-import com.eventimist.server.dto.organizerActionsDTO.TestingDTO;
-import com.eventimist.server.dto.organizerActionsDTO.UpdateProfileDTO;
+import com.eventimist.server.dto.common.ApiResponseDTO;
+import com.eventimist.server.dto.organizerActionsDTO.*;
 import com.eventimist.server.service.OrganizerActionsService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -62,12 +60,38 @@ public class OrganizerActionsControllers {
     }
 
     // get all events by organizer ID //
-    @GetMapping("all-events")
-    public ResponseEntity<?> getAllEvents() {
+    @GetMapping("/events")
+    public ResponseEntity<?> getEvents() {
+
         List<GetEventsResponseDTO> events = organizerActionsService.getEventsByOrganizerId();
-        return new ResponseEntity<>(events, HttpStatus.OK);
+
+        return ResponseEntity.ok(events);
     }
 
+
+    @PutMapping("/events/{id}")
+    public ResponseEntity<?> updateEvent(
+            @PathVariable Long id,
+           @Valid @ModelAttribute EditEventDTO editEventDTO
+    ) {
+
+        organizerActionsService.updateEvent(id, editEventDTO);
+
+        return ResponseEntity.ok(
+                ApiResponseDTO.success("Event updated successfully")
+        );
+    }
+
+
+    @PatchMapping("/events/{id}/publish")
+    public ResponseEntity<?> publishEvent(@PathVariable Long id) {
+
+        organizerActionsService.publishEvent(id);
+
+        return ResponseEntity.ok(
+                ApiResponseDTO.success("Event published successfully")
+        );
+    }
 
     @PatchMapping("update-profile-info")
     public ResponseEntity<?> updateProfileInfo(@Valid @RequestBody UpdateProfileDTO updateProfileDTO){
