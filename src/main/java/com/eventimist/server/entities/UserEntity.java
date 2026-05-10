@@ -31,7 +31,7 @@ public class UserEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
-    private List<EventEntity> attendingEvents;
+    private List<EventEntity> rsvpEvents;
 
     // Many-to-Many relationship for bookmarked events
     @ManyToMany(fetch = FetchType.LAZY)
@@ -41,4 +41,8 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )
     private List<EventEntity> bookmarkedEvents;
+
+    @Column(nullable = false)
+    private boolean onboardingCompleted = false;
+
 }
