@@ -1,6 +1,7 @@
 package com.eventimist.server.controllers;
 import com.eventimist.server.dto.UserActionsDTO.EventsResponseDTO;
 import com.eventimist.server.dto.UserActionsDTO.NearbyEventsDTO;
+import com.eventimist.server.dto.common.ApiResponseDTO;
 import com.eventimist.server.service.UserActionsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,17 +22,51 @@ public class UserActionsControllers {
         return  new ResponseEntity<>("success", HttpStatus.OK);
 
     }
+
+
+    //rsvp events //
+    @PostMapping("event/rsvp/{eventId}")
+    public ResponseEntity<?>rsvpEvent(@PathVariable Long eventId ){
+
+        userActionsService.rsvpEvent(eventId);
+
+        return ResponseEntity.ok(ApiResponseDTO.success("event rsvp  done"));
+
+    }
+
+    // get rsvp events //
+
+    @GetMapping("events/rsvp")
+    public  ResponseEntity<?>getRsvpEvents(){
+
+        List<EventsResponseDTO> events = userActionsService.getRsvpEvents();
+
+        return  ResponseEntity.ok(events);
+
+    }
+
+  // delete RSVP events //
+
+    @DeleteMapping("events/rsvp/{eventId}")
+    public  ResponseEntity<?> removeRsvpEvents(@PathVariable Long eventId){
+
+         userActionsService.removeRsvp(eventId);
+
+      return  ResponseEntity.ok(ApiResponseDTO.success("event removed from rsvp"));
+    }
+
+
+
+    
+
     @PostMapping ("bookmark-event")
     ResponseEntity<?> bookMarkEvent (@RequestParam Long userId , @RequestParam Long eventId){
         userActionsService.bookmarkEvents(userId,eventId);
         return  new ResponseEntity<>("added", HttpStatus.OK);
     }
-    @PostMapping ("attend-event")
-    ResponseEntity<?> attendEvent(@RequestParam Long userId , @RequestParam Long eventId){
-        userActionsService.attendEvents(userId, eventId);
-        return  new ResponseEntity<>("updated", HttpStatus.OK );
 
-    }
+
+
     @GetMapping("get-bookmarked-events")
     ResponseEntity<?> getBookMarkedEvents(@RequestParam Long userId){
         List<EventsResponseDTO> events = userActionsService.getBookmarkedEvents(userId);
@@ -44,14 +79,14 @@ public class UserActionsControllers {
 
         return  new ResponseEntity<>(events, HttpStatus.OK);
     }
-    @PostMapping("get-nearby-events")
-    ResponseEntity<?> getNearbyEvents(@RequestBody NearbyEventsDTO dto){
-
-
-        List<EventsResponseDTO> events =  userActionsService.getNearbyEvents(dto.getLatitude(), dto.getLongitude(),dto.getRadiusKm());
-
-        return  new ResponseEntity<>(events, HttpStatus.OK);
-        
-    }
+//    @PostMapping("get-nearby-events")
+//    ResponseEntity<?> getNearbyEvents(@RequestBody NearbyEventsDTO dto){
+//
+//
+//        List<EventsResponseDTO> events =  userActionsService.getNearbyEvents(dto.getLatitude(), dto.getLongitude(),dto.getRadiusKm());
+//
+//        return  new ResponseEntity<>(events, HttpStatus.OK);
+//
+//    }
 
 }
