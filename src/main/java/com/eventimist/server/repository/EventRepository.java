@@ -12,18 +12,42 @@ public interface EventRepository extends JpaRepository<EventEntity, Long> {
     List<EventEntity> findByOrganizerId(Long organizerId);
 
     @Query(value = """
-        SELECT * FROM event 
-        WHERE ST_DWithin(
-            location,
-            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
-            :distanceInMeters
-        )
-        ORDER BY ST_Distance(
-            location, 
-            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography
-        )
-        """, nativeQuery = true)
-    List<EventEntity> findNearbyEvents(
+SELECT 
+    e.id AS id,
+    e.title AS title,
+    e.description AS description,
+    e.category AS category,
+    e.start_time AS startTime,
+    e.timezone AS timezone,
+    e.mode AS mode,
+    e.venue AS venue,
+    e.cover_image AS coverImage,
+    e.slug AS slug,
+    ST_Y(e.location::geometry) AS latitude,
+    ST_X(e.location::geometry) AS longitude,
+
+    ST_Distance(
+        e.location,
+        ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography
+    ) / 1000 AS distance,
+
+    o.name AS organizerName,
+    o.profile_pic AS organizerImage
+
+FROM event e
+JOIN organizers o ON e.organizer_id = o.id
+
+WHERE e.status = 'PUBLISHED'
+AND ST_DWithin(
+    e.location,
+    ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326)::geography,
+    :distanceInMeters
+)
+
+ORDER BY distance ASC
+LIMIT 100
+""", nativeQuery = true)
+    List<NearbyEventProjection> findNearbyEvents(
             @Param("latitude") double latitude,
             @Param("longitude") double longitude,
             @Param("distanceInMeters") double distanceInMeters
