@@ -137,7 +137,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
                         .toList();
 
             } finally {
-                executor.shutdown(); // ⚠️ very important
+                executor.shutdown(); // ⚠ very important
             }
         }
 
@@ -178,26 +178,26 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
     @Override
     public EventEntity updateEvent(Long id, EditEventDTO dto) {
 
-        // 1️⃣ Fetch existing event
+        // 1️ Fetch existing event
         EventEntity event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
-        // 2️⃣ Validate organizer ownership
+        // 2️ Validate organizer ownership
         if (event.getOrganizer().getId() != getUserId()) {
             throw new RuntimeException("Unauthorized to edit this event");
         }
 
-        // 3️⃣ Basic fields
+        // 3⃣ Basic fields
         event.setTitle(dto.getTitle());
         event.setDescription(dto.getDescription());
         event.setCategory(dto.getCategory());
 
-        // 4️⃣ Time
+        // 4️ Time
         event.setStartTime(dto.getStartTime());
         event.setEndTime(dto.getEndTime());
         event.setTimezone(dto.getTimezone());
 
-        // 5️⃣ Mode & Location
+        // 5️ Mode & Location
         event.setMode(dto.getMode());
         event.setVenue(dto.getVenue());
         event.setOnlineLink(dto.getOnlineLink());
@@ -207,7 +207,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         );
         event.setLocation(location);
 
-        // 6️⃣ Tags
+        // 6️ Tags
         if (dto.getTags() != null) {
             event.setTags(
                     dto.getTags().stream()
@@ -216,7 +216,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
             );
         }
 
-        // 7️⃣ Ticketing
+        // 7️ Ticketing
         event.setCapacity(dto.getCapacity());
         event.setIsFree(dto.getIsFree());
 
@@ -226,29 +226,29 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
             event.setTicketPrice(null);
         }
 
-        // 8️⃣ Images (clean call)
+        // 8️ Images (clean call)
         handleImages(event, dto);
 
 
-        // 9️⃣ Timestamp
+        // 9️ Timestamp
         event.setUpdatedAt(LocalDateTime.now());
 
-        // 🔟 Save
+        //  Save
         return eventRepository.save(event);
     }
 
 
     private void handleImages(EventEntity event, EditEventDTO dto) {
 
-        // 👉 Check if user even wants to update images
+        //  Check if user even wants to update images
         boolean hasExisting = dto.getExistingImages() != null;
         boolean hasNew = dto.getNewImages() != null && dto.getNewImages().length > 0;
 
         if (!hasExisting && !hasNew) {
-            return; // ✅ no change
+            return; //  no change
         }
 
-        // 👉 Step 1: Calculate counts
+        //  Step 1: Calculate counts
         int existingCount = hasExisting
                 ? dto.getExistingImages().size()
                 : event.getImages().size();
@@ -257,12 +257,12 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
                 ? dto.getNewImages().length
                 : 0;
 
-        // 👉 Step 2: Validate limit
+        //  Step 2: Validate limit
         if (existingCount + newCount > 5) {
             throw new RuntimeException("Maximum 5 images allowed");
         }
 
-        // 👉 Step 3: Prepare final list
+        //  Step 3: Prepare final list
         List<String> finalImages = new ArrayList<>();
 
         // retain existing
@@ -272,7 +272,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
             finalImages.addAll(event.getImages());
         }
 
-        // 👉 Step 4: Upload new images
+        //  Step 4: Upload new images
         if (hasNew) {
             List<String> newUrls = Arrays.stream(dto.getNewImages()).parallel()
                     .map(file -> {
@@ -287,7 +287,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
             finalImages.addAll(newUrls);
         }
 
-        // 👉 8️⃣ FIX: Sync cover image (ADD HERE)
+        //  FIX: Sync cover image (ADD HERE)
         if (finalImages == null || finalImages.isEmpty()) {
             event.setCoverImage(null);
         } else {
@@ -295,7 +295,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
                 event.setCoverImage(finalImages.get(0));
             }
         }
-        // 👉 Step 5: Update entity
+        // Step 5: Update entity
         event.setImages(finalImages);
     }
 
@@ -374,7 +374,7 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
     @Override
     public void publishEvent(Long eventId) {
         LocalDateTime now = LocalDateTime.now();
-        // 1️⃣ Fetch event
+        // 1️ Fetch event
         EventEntity event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new RuntimeException("Event not found"));
 
@@ -393,12 +393,12 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
             throw new RuntimeException("Start time cannot be after end time");
         }
 
-        // 3️⃣ Already published check
+
         if (event.getStatus() == EventStatus.PUBLISHED) {
             throw new RuntimeException("Event is already published");
         }
 
-        // 4️⃣ VALIDATIONS 🔥
+
 
         if (event.getTitle() == null || event.getTitle().isBlank()) {
             throw new RuntimeException("Title is required");
@@ -461,20 +461,22 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
             }
         }
 
-        // 5️⃣ Generate slug (basic version)
+        // 5 Generate slug with id
         String slug = event.getTitle()
                 .toLowerCase()
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-|-$)", "");
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .trim()
+                .replaceAll("\\s+", "-")
+                + "-" + event.getId();
 
         event.setSlug(slug);
 
-        // 6️⃣ Update status
+        // 6️ Update status
         event.setStatus(EventStatus.PUBLISHED);
         event.setPublishedAt(LocalDateTime.now());
         event.setUpdatedAt(LocalDateTime.now());
 
-        // 7️⃣ Save
+        // 7️ Save
         eventRepository.save(event);
     }
 
