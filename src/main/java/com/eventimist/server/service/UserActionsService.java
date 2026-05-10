@@ -7,8 +7,10 @@ import java.util.List;
 public interface UserActionsService {
 
     void bookmarkEvents (Long userId ,  Long eventId);
-    void attendEvents (Long userId , Long eventId);
+    void rsvpEvent(Long eventId);
+    void removeRsvp(Long eventId);
+    List<EventsResponseDTO>  getRsvpEvents ();
     List<EventsResponseDTO> getBookmarkedEvents (Long userId );
     List<EventsResponseDTO>getAttendingEvents (Long userId);
-    List<EventsResponseDTO>getNearbyEvents(double latitude, double longitude, double radiusKm);
+//    List<EventsResponseDTO>getNearbyEvents(double latitude, double longitude, double radiusKm);
 }
