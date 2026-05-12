@@ -1,6 +1,7 @@
 package com.eventimist.server.controllers;
 
 
+import com.eventimist.server.dto.common.ApiResponseDTO;
 import com.eventimist.server.dto.publicDTO.DiscoverEventResponseDTO;
 import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
 import com.eventimist.server.dto.publicDTO.ViewEventResponseDTO;
@@ -16,6 +17,16 @@ public class PublicControllers {
 
     @Autowired
     private PublicService publicService;
+
+    @GetMapping("/health")
+    public  ResponseEntity<?>checkHealth(){
+
+        return ResponseEntity.ok(
+                ApiResponseDTO.success("health check... Success")
+        );
+    }
+
+
 
     @GetMapping("/discover-events")
     public ResponseEntity<?> discoverEvents(
