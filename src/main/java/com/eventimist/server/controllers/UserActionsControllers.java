@@ -31,8 +31,8 @@ public class UserActionsControllers {
         userActionsService.rsvpEvent(eventId);
 
         return ResponseEntity.ok(ApiResponseDTO.success("event rsvp  done"));
-
     }
+
 
     // get rsvp events //
 
@@ -59,10 +59,10 @@ public class UserActionsControllers {
 
     
 
-    @PostMapping ("bookmark-event")
-    ResponseEntity<?> bookMarkEvent (@RequestParam Long userId , @RequestParam Long eventId){
-        userActionsService.bookmarkEvents(userId,eventId);
-        return  new ResponseEntity<>("added", HttpStatus.OK);
+    @PostMapping ("bookmark-event/{eventId}")
+    ResponseEntity<?> bookMarkEvent (@PathVariable Long eventId){
+        userActionsService.bookmarkEvents(eventId);
+        return  ResponseEntity.ok(ApiResponseDTO.success("event bookmarked !!"));
     }
 
 
