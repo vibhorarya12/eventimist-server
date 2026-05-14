@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface UserActionsService {
 
-    void bookmarkEvents (Long userId ,  Long eventId);
+    void bookmarkEvents (Long eventId);
     void rsvpEvent(Long eventId);
     void removeRsvp(Long eventId);
     List<EventsResponseDTO>  getRsvpEvents ();
