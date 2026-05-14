@@ -46,9 +46,9 @@ public class UserActionsServiceImplement implements UserActionsService {
     }
 
     @Override
-    public void bookmarkEvents(Long userId, Long eventId) {
+    public void bookmarkEvents(Long eventId) {
         // Fetch the user by ID
-        UserEntity user = userRepository.findById(userId)
+        UserEntity user = userRepository.findById(getUserId())
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
         // Fetch the event by ID
@@ -58,6 +58,10 @@ public class UserActionsServiceImplement implements UserActionsService {
         // Add the event to the user's bookmarked events if not already present
         if (!user.getBookmarkedEvents().contains(event)) {
             user.getBookmarkedEvents().add(event);
+        }
+        else{
+
+            throw  new ExistingEntityException("event is already book marked !!");
         }
 
         // Save the updated user entity
