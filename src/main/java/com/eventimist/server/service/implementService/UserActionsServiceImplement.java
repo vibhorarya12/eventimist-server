@@ -1,5 +1,6 @@
 package com.eventimist.server.service.implementService;
 
+import com.eventimist.server.dto.UserActionsDTO.EventInteractionsResponseDTO;
 import com.eventimist.server.dto.UserActionsDTO.EventsResponseDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.entities.OrganizerEntity;
@@ -237,29 +238,26 @@ public class UserActionsServiceImplement implements UserActionsService {
                 .collect(Collectors.toList());
     }
 
-//    @Override
-//    public List<EventsResponseDTO> getNearbyEvents(double latitude, double longitude, double radiusKm) {
-//        try {
-//            // Convert radius from kilometers to meters
-//            double radiusInMeters = radiusKm * 1000;
-//
-//            // Fetch nearby events using PostGIS
-//            List<EventEntity> nearbyEvents = eventRepository.findNearbyEvents(
-//                    latitude,
-//                    longitude,
-//                    radiusInMeters
-//            );
-//            System.out.println(nearbyEvents);
-//            // Convert to DTOs
-//            return nearbyEvents.stream()
-//                    .map(this::convertToDTO)
-//                    .collect(Collectors.toList());
-//
-//        } catch (Exception e) {
-////            log.error("Error finding nearby events: ", e);
-//            throw new RuntimeException("Failed to find nearby events", e);
-//        }
-//    }
+    @Override
+    public EventInteractionsResponseDTO getEventInteractions() {
+
+        UserEntity user = userRepository.findById(getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        List<Long> rsvpEventIds = user.getRsvpEvents()
+                .stream()
+                .map(EventEntity::getId)
+                .toList();
+
+        EventInteractionsResponseDTO response =
+                new EventInteractionsResponseDTO();
+
+        response.setRsvpEventIds(rsvpEventIds);
+
+        return response;
+    }
+
+
 
     private EventsResponseDTO convertToDTO(EventEntity event) {
         Point location = event.getLocation();

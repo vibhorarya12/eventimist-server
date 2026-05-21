@@ -1,5 +1,6 @@
 package com.eventimist.server.service;
 
+import com.eventimist.server.dto.UserActionsDTO.EventInteractionsResponseDTO;
 import com.eventimist.server.dto.UserActionsDTO.EventsResponseDTO;
 
 import java.util.List;
@@ -12,5 +13,6 @@ public interface UserActionsService {
     List<EventsResponseDTO>  getRsvpEvents ();
     List<EventsResponseDTO> getBookmarkedEvents (Long userId );
     List<EventsResponseDTO>getAttendingEvents (Long userId);
+    EventInteractionsResponseDTO getEventInteractions();
 //    List<EventsResponseDTO>getNearbyEvents(double latitude, double longitude, double radiusKm);
 }

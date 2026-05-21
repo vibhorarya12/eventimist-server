@@ -1,4 +1,5 @@
 package com.eventimist.server.controllers;
+import com.eventimist.server.dto.UserActionsDTO.EventInteractionsResponseDTO;
 import com.eventimist.server.dto.UserActionsDTO.EventsResponseDTO;
 import com.eventimist.server.dto.UserActionsDTO.NearbyEventsDTO;
 import com.eventimist.server.dto.common.ApiResponseDTO;
@@ -53,6 +54,19 @@ public class UserActionsControllers {
          userActionsService.removeRsvp(eventId);
 
       return  ResponseEntity.ok(ApiResponseDTO.success("event removed from rsvp"));
+    }
+
+
+// event interactions for returning rsvped event id's //
+    // UserActionsController.java
+
+    @GetMapping("/event/interactions")
+    public ResponseEntity<?> getEventInteractions() {
+
+        EventInteractionsResponseDTO response =
+                userActionsService.getEventInteractions();
+
+        return ResponseEntity.ok(response);
     }
 
 
