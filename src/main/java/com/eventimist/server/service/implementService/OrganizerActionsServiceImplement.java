@@ -1,5 +1,7 @@
 package com.eventimist.server.service.implementService;
 
+import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
+import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.EditEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
@@ -12,6 +14,7 @@ import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.exceptions.ImageUploadException;
 import com.eventimist.server.repository.EventRepository;
 import com.eventimist.server.repository.OrganizerRepository;
+import com.eventimist.server.service.AIService;
 import com.eventimist.server.service.CloudinaryService;
 import com.eventimist.server.service.OrganizerActionsService;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +52,10 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         this.organizerRepository = organizerRepository;
         this.cloudinaryService = cloudinaryService;
     }
+
+
+    @Autowired
+   private AIService aiService;
 
     private Authentication getAuthentication() {
         return SecurityContextHolder.getContext().getAuthentication();
@@ -479,6 +486,18 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         // 7️ Save
         eventRepository.save(event);
     }
+
+    @Override
+    public AIEventDraftResponseDTO organizerAIEventsDraft(
+            GenerateEventDraftRequestDTO dto
+    ) {
+        return aiService.generateEventDraft(dto);
+    }
+
+
+
+
+
 
 
     private GetEventsResponseDTO mapToGetEventsResponseDTO(EventEntity event) {
