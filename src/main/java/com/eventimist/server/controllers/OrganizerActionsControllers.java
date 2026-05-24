@@ -1,8 +1,11 @@
 package com.eventimist.server.controllers;
 
 import com.cloudinary.Cloudinary;
+import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
+import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.common.ApiResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.*;
+import com.eventimist.server.service.AIService;
 import com.eventimist.server.service.OrganizerActionsService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -112,6 +115,18 @@ public class OrganizerActionsControllers {
     }
 
 
+    @PostMapping("/generate-event-draft")
+    public ResponseEntity<AIEventDraftResponseDTO> generateEventDraft(
+            @Valid @RequestBody GenerateEventDraftRequestDTO requestDTO
+    ) {
+
+        AIEventDraftResponseDTO response =
+                organizerActionsService.organizerAIEventsDraft(requestDTO);
+
+        return ResponseEntity.ok(response);
+    }
+
+
 
 
     @PostMapping("upload")
@@ -125,3 +140,5 @@ public class OrganizerActionsControllers {
         }
     }
 }
+
+
