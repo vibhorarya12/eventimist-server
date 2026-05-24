@@ -43,6 +43,7 @@ Rules:
 - If mode absent -> empty mode.
 - onlineLink only if explicitly provided.
 - Use ISO datetime format.
+- If the prompt describes an event concept or idea, generate a complete event draft with title, description, category, and tags whenever reasonably inferable.
 
 Allowed categories:
 MUSIC,TECH,BUSINESS,ART,SPORTS,EDUCATION,HEALTH,FOOD,NETWORKING,OTHER
