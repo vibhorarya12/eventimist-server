@@ -1,5 +1,7 @@
 package com.eventimist.server.service;
 
+import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
+import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.EditEventDTO;
 import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
@@ -16,5 +18,6 @@ public interface OrganizerActionsService {
         String UpdateImage (MultipartFile file , String type);
         public EventEntity updateEvent(Long id, EditEventDTO dto);
         public void publishEvent(Long eventId);
+        AIEventDraftResponseDTO organizerAIEventsDraft (GenerateEventDraftRequestDTO dto);
 
 }
