@@ -1,5 +1,7 @@
 package com.eventimist.server.service.implementService;
 
+import com.eventimist.server.ai.OrganizerAITools;
+import com.eventimist.server.dto.ai.AIChatResponseDTO;
 import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.service.AIService;
@@ -15,6 +17,8 @@ public class AIServiceImplement implements AIService {
     private final ChatClient chatClient;
 
     private final ObjectMapper objectMapper;
+
+    private final OrganizerAITools organizerAITools;
 
     @Override
     public AIEventDraftResponseDTO generateEventDraft(
@@ -75,4 +79,18 @@ JSON:
             throw new RuntimeException("Failed to parse AI response");
         }
     }
+
+    @Override
+    public AIChatResponseDTO chat(String prompt) {
+
+        return chatClient.prompt()
+                .user(prompt)
+                .tools(organizerAITools)
+                .call()
+                .entity(AIChatResponseDTO.class);
+    }
+
+
+
+
 }
