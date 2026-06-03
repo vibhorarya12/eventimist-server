@@ -4,7 +4,7 @@ import com.eventimist.server.dto.ai.AIChatResponseDTO;
 import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 
-public interface AIService {
+public interface OrganizerAIService {
 
     AIEventDraftResponseDTO generateEventDraft(
             GenerateEventDraftRequestDTO requestDTO
