@@ -2,19 +2,18 @@ package com.eventimist.server.service.implementService;
 
 import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
-import com.eventimist.server.dto.organizerActionsDTO.CreateEventDTO;
-import com.eventimist.server.dto.organizerActionsDTO.EditEventDTO;
-import com.eventimist.server.dto.organizerActionsDTO.GetEventsResponseDTO;
-import com.eventimist.server.dto.organizerActionsDTO.UpdateProfileDTO;
+import com.eventimist.server.dto.organizerActionsDTO.*;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.entities.OrganizerEntity;
+import com.eventimist.server.entities.OrganizerSubscriptionEntity;
 import com.eventimist.server.enums.EventStatus;
 import com.eventimist.server.exceptions.BadRequestException;
 import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.exceptions.ImageUploadException;
 import com.eventimist.server.repository.EventRepository;
 import com.eventimist.server.repository.OrganizerRepository;
-import com.eventimist.server.service.AIService;
+import com.eventimist.server.repository.OrganizerSubscriptionRepository;
+import com.eventimist.server.service.OrganizerAIService;
 import com.eventimist.server.service.CloudinaryService;
 import com.eventimist.server.service.OrganizerActionsService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,14 +26,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import com.eventimist.server.ai.dto.AIEventSummaryDTO;
 
 @Slf4j
 @Service
@@ -47,15 +45,16 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
     private final CloudinaryService cloudinaryService;
 
     @Autowired
-    public OrganizerActionsServiceImplement(EventRepository eventRepository, OrganizerRepository organizerRepository, CloudinaryService cloudinaryService) {
+    private final OrganizerSubscriptionRepository organizerSubscriptionRepository;
+    @Autowired
+    public OrganizerActionsServiceImplement(EventRepository eventRepository, OrganizerRepository organizerRepository, CloudinaryService cloudinaryService , OrganizerSubscriptionRepository organizerSubscriptionRepository) {
         this.eventRepository = eventRepository;
         this.organizerRepository = organizerRepository;
         this.cloudinaryService = cloudinaryService;
+        this.organizerSubscriptionRepository = organizerSubscriptionRepository;
     }
 
 
-    @Autowired
-   private AIService aiService;
 
     private Authentication getAuthentication() {
         return SecurityContextHolder.getContext().getAuthentication();
@@ -183,6 +182,31 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
 
 
     @Override
+    public List<AIEventSummaryDTO> getEventsByStatus(
+            EventStatus status
+    ) {
+
+        List<EventEntity> events =
+                eventRepository.findByOrganizerIdAndStatus(
+                        getUserId(),
+                        status
+                );
+
+        return events.stream()
+                .map(event -> AIEventSummaryDTO.builder()
+                        .id(event.getId())
+                        .title(event.getTitle())
+                        .slug(event.getSlug())
+                        .coverImage(event.getCoverImage())
+                        .status(event.getStatus().name())
+                        .build())
+                .toList();
+    }
+
+
+
+
+    @Override
     public EventEntity updateEvent(Long id, EditEventDTO dto) {
 
         // 1️ Fetch existing event
@@ -305,9 +329,6 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         // Step 5: Update entity
         event.setImages(finalImages);
     }
-
-
-
 
 
     @Override
@@ -487,17 +508,31 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         eventRepository.save(event);
     }
 
+
+
+
+
     @Override
-    public AIEventDraftResponseDTO organizerAIEventsDraft(
-            GenerateEventDraftRequestDTO dto
-    ) {
-        return aiService.generateEventDraft(dto);
+    public OrganizerSubscriptionResponseDTO getOrganizerSubscription() {
+
+        Long organizerId = getUserId();
+        OrganizerSubscriptionEntity subscription =
+                organizerSubscriptionRepository
+                        .findByOrganizerId(organizerId)
+                        .orElseThrow(() ->
+                                new EntityNotFoundException("Subscription not found"));
+
+        OrganizerSubscriptionResponseDTO response =
+                new OrganizerSubscriptionResponseDTO();
+
+        response.setPlanType(subscription.getPlanType());
+        response.setAiCreditsRemaining(subscription.getAiCreditsRemaining());
+        response.setMonthlyAiCredits(subscription.getMonthlyAiCredits());
+        response.setPromptCharacterLimit(subscription.getPromptCharacterLimit());
+        response.setActive(subscription.getActive());
+
+        return response;
     }
-
-
-
-
-
 
 
     private GetEventsResponseDTO mapToGetEventsResponseDTO(EventEntity event) {
