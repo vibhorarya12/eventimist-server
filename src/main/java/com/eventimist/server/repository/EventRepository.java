@@ -1,6 +1,7 @@
 package com.eventimist.server.repository;
 
 import com.eventimist.server.entities.EventEntity;
+import com.eventimist.server.enums.EventStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +11,10 @@ import java.util.List;
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
 
     List<EventEntity> findByOrganizerId(Long organizerId);
+    List<EventEntity> findByOrganizerIdAndStatus(
+            Long organizerId,
+            EventStatus status
+    );
 
     @Query(value = """
 SELECT 

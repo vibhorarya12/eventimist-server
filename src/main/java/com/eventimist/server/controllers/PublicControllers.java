@@ -4,10 +4,8 @@ package com.eventimist.server.controllers;
 import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.common.ApiResponseDTO;
-import com.eventimist.server.dto.publicDTO.DiscoverEventResponseDTO;
 import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
-import com.eventimist.server.dto.publicDTO.ViewEventResponseDTO;
-import com.eventimist.server.service.AIService;
+import com.eventimist.server.service.OrganizerAIService;
 import com.eventimist.server.service.PublicService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +22,7 @@ public class PublicControllers {
     private PublicService publicService;
 
     @Autowired
-    private  AIService aiService;
+    private OrganizerAIService organizerAiService;
 
     @GetMapping("/health")
     public  ResponseEntity<?>checkHealth(){
@@ -69,7 +67,7 @@ public class PublicControllers {
     ) {
 
         AIEventDraftResponseDTO response =
-                aiService.generateEventDraft(requestDTO);
+                organizerAiService.generateEventDraft(requestDTO);
 
         return ResponseEntity.ok(response);
     }
