@@ -1,25 +1,22 @@
 package com.eventimist.server.controllers;
 
 import com.cloudinary.Cloudinary;
+import com.eventimist.server.dto.ai.AIChatRequestDTO;
+import com.eventimist.server.dto.ai.AIChatResponseDTO;
 import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.common.ApiResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.*;
-import com.eventimist.server.service.AIService;
+import com.eventimist.server.service.OrganizerAIService;
 import com.eventimist.server.service.OrganizerActionsService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +34,8 @@ public class OrganizerActionsControllers {
     @Autowired
     private Cloudinary cloudinary;
 
+    @Autowired
+    private OrganizerAIService organizerAiService;
 
     @PostMapping("check")
     public ResponseEntity<?> check(@RequestPart("files") MultipartFile[] files) {
@@ -121,12 +120,29 @@ public class OrganizerActionsControllers {
     ) {
 
         AIEventDraftResponseDTO response =
-                organizerActionsService.organizerAIEventsDraft(requestDTO);
+                organizerAiService.generateEventDraft(requestDTO);
+
 
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/ai-chat")
+    public ResponseEntity<AIChatResponseDTO> chat(
+            @RequestBody AIChatRequestDTO request
+    ) {
 
+        AIChatResponseDTO response =
+                organizerAiService.chat(request.getPrompt());
+
+        return ResponseEntity.ok(response);
+    }
+
+   @GetMapping("/subscriptions")
+   public ResponseEntity<OrganizerSubscriptionResponseDTO> getSubscription(){
+        OrganizerSubscriptionResponseDTO response = organizerActionsService.getOrganizerSubscription();
+
+        return  ResponseEntity.ok(response);
+   }
 
 
     @PostMapping("upload")
