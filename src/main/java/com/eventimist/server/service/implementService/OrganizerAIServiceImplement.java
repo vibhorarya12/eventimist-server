@@ -131,6 +131,27 @@ JSON:
                             .data(events)
                             .build();
                 }
+
+                case GENERAL_CHAT -> {
+
+                    return AIChatResponseDTO.builder()
+                            .type("TEXT")
+                            .message("""
+                    Hi! I'm Eventimist AI.
+
+                    I can help you:
+                    • List drafted events
+                    • Show published events
+                    • View subscription details
+                    • Check AI credits
+
+                    Try asking me something about your events.
+                    """)
+                            .data(null)
+                            .build();
+                }
+
+
                 case SUBSCRIPTION_INFO -> {
 
                     OrganizerSubscriptionResponseDTO subscription =
@@ -174,7 +195,17 @@ JSON:
 
 
     private AIIntent determineIntent(String prompt) {
+        String p = prompt.toLowerCase().trim();
 
+        if (
+                p.equals("hi") ||
+                        p.equals("hello") ||
+                        p.equals("hey") ||
+                        p.equals("thanks")
+        ) {
+            log.info("cached chat called");
+            return AIIntent.GENERAL_CHAT;
+        }
         String systemPrompt = """
 You are an intent classification engine.
 
@@ -224,11 +255,10 @@ EVENT_ANALYTICS:
 - which event performed best
 
 GENERAL_CHAT:
-- hello
-- hi
-- how are you
-- good morning
-- who are you
+- greetings
+- casual conversation
+- asking about the assistant
+- thanking the assistant
 
 UNKNOWN:
 - anything that does not clearly match the above intents

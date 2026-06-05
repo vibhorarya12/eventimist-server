@@ -7,5 +7,7 @@ public enum AIIntent {
 
     SUBSCRIPTION_INFO,
 
+    GENERAL_CHAT,
+
     UNKNOWN
 }
