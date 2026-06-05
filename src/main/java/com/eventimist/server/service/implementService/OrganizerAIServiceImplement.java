@@ -4,9 +4,14 @@ import com.eventimist.server.ai.OrganizerAITools;
 import com.eventimist.server.dto.ai.AIChatResponseDTO;
 import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
+import com.eventimist.server.dto.ai.GenerateEventDraftResponseDTO;
 import com.eventimist.server.dto.organizerActionsDTO.OrganizerSubscriptionResponseDTO;
+import com.eventimist.server.entities.OrganizerSubscriptionEntity;
 import com.eventimist.server.enums.AIIntent;
 import com.eventimist.server.enums.EventStatus;
+import com.eventimist.server.exceptions.BadRequestException;
+import com.eventimist.server.exceptions.EntityNotFoundException;
+import com.eventimist.server.repository.OrganizerSubscriptionRepository;
 import com.eventimist.server.service.OrganizerAIService;
 import com.eventimist.server.service.OrganizerActionsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import com.eventimist.server.ai.dto.AIEventSummaryDTO;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,13 +39,39 @@ public class OrganizerAIServiceImplement implements OrganizerAIService {
 
     private final OrganizerActionsService organizerActionsService;
 
+    private  final OrganizerSubscriptionRepository organizerSubscriptionRepository;
 
+    private Authentication getAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    private Long getUserId() {
+        Object principal = getAuthentication().getPrincipal();
+        if (principal instanceof Long) {
+            return (Long) principal;
+        }
+        throw new IllegalStateException("Principal is not of type Long");
+    }
 
     @Override
-    public AIEventDraftResponseDTO generateEventDraft(
+    @Transactional
+    public GenerateEventDraftResponseDTO generateEventDraft(
             GenerateEventDraftRequestDTO requestDTO
     ) {
 
+        OrganizerSubscriptionEntity subscription =
+                organizerSubscriptionRepository
+                        .findByOrganizerId(getUserId())
+                        .orElseThrow(() ->
+                                new EntityNotFoundException(
+                                        "Subscription not found"
+                                ));
+
+        if (subscription.getAiCreditsRemaining() <= 0) {
+            throw new BadRequestException(
+                    "No AI credits remaining."
+            );
+        }
         String systemPrompt = """
 Generate event draft JSON only.
 
@@ -84,13 +118,36 @@ JSON:
                 .content();
 
         try {
-            return objectMapper.readValue(
-                    response,
-                    AIEventDraftResponseDTO.class
+
+            AIEventDraftResponseDTO draft =
+                    objectMapper.readValue(
+                            response,
+                            AIEventDraftResponseDTO.class
+                    );
+
+            subscription.setAiCreditsRemaining(
+                    subscription.getAiCreditsRemaining() - 1
             );
+
+            organizerSubscriptionRepository.save(
+                    subscription
+            );
+
+            OrganizerSubscriptionResponseDTO updatedSubscription =
+                    organizerActionsService.getOrganizerSubscription();
+
+            return GenerateEventDraftResponseDTO.builder()
+                    .draft(draft)
+                    .subscription(updatedSubscription)
+                    .build();
+
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse AI response");
+
+            throw new RuntimeException(
+                    "Failed to parse AI response"
+            );
         }
+
     }
 
 

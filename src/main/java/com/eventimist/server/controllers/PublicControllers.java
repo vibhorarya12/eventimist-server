@@ -3,6 +3,7 @@ package com.eventimist.server.controllers;
 
 import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
+import com.eventimist.server.dto.ai.GenerateEventDraftResponseDTO;
 import com.eventimist.server.dto.common.ApiResponseDTO;
 import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
 import com.eventimist.server.service.OrganizerAIService;
@@ -62,11 +63,11 @@ public class PublicControllers {
 
 
     @PostMapping("/generate-event-draft")
-    public ResponseEntity<AIEventDraftResponseDTO> generateEventDraft(
+    public ResponseEntity<GenerateEventDraftResponseDTO> generateEventDraft(
             @Valid @RequestBody GenerateEventDraftRequestDTO requestDTO
     ) {
 
-        AIEventDraftResponseDTO response =
+        GenerateEventDraftResponseDTO response =
                 organizerAiService.generateEventDraft(requestDTO);
 
         return ResponseEntity.ok(response);
