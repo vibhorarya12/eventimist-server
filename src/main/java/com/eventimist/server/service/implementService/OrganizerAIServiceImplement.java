@@ -23,6 +23,7 @@ import com.eventimist.server.ai.dto.AIEventSummaryDTO;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import com.eventimist.server.ai.SystemPrompts;
 
 import java.util.List;
 
@@ -72,56 +73,36 @@ public class OrganizerAIServiceImplement implements OrganizerAIService {
                     "No AI credits remaining."
             );
         }
-        String systemPrompt = """
-Generate event draft JSON only.
 
-An event is a meetup, workshop, webinar, conference, hackathon, bootcamp, festival, networking session, competition, or community gathering attended physically or online.
 
-Rules:
-- Return ONLY valid JSON.
-- Never add explanations.
-- Never invent missing information.
-- Never invent dates, times, URLs, modes, locations, or categories.
-- Only generate fields clearly requested or inferable from the prompt.
-- Return empty values for unnecessary or unknown fields.
-- Generate memorable and engaging event titles suitable for marketing posters and event listings.
-- Generate exactly 5 relevant lowercase tags only if tags are meaningfully inferable.
-- Description should be engaging, professional, and 3-5 sentences only if description is requested or inferable.
-- If startTime exists -> endTime = +3hrs.
-- If no date/time provided -> empty startTime/endTime.
-- Detect mode only if explicitly mentioned:
-  ONLINE, OFFLINE, HYBRID.
-- If mode absent -> empty mode.
-- onlineLink only if explicitly provided.
-- Use ISO datetime format.
-- If the prompt describes an event concept or idea, generate a complete event draft with title, description, category, and tags whenever reasonably inferable.
+        String aiResponse;
 
-Allowed categories:
-MUSIC,TECH,BUSINESS,ART,SPORTS,EDUCATION,HEALTH,FOOD,NETWORKING,OTHER
+        try {
 
-JSON:
-{
-"title":"",
-"description":"",
-"category":"",
-"tags":[],
-"startTime":"",
-"endTime":"",
-"mode":"",
-"onlineLink":""
-}
-""";
-        String response = chatClient.prompt()
-                .system(systemPrompt)
-                .user(requestDTO.getPrompt())
-                .call()
-                .content();
+            aiResponse = chatClient.prompt()
+                    .system(SystemPrompts.EVENT_DRAFT_GENERATION)
+                    .user(requestDTO.getPrompt())
+                    .call()
+                    .content();
+
+        } catch (Exception e) {
+
+            log.error(
+                    "AI generation failed for organizer {}",
+                    getUserId(),
+                    e
+            );
+
+            throw new RuntimeException(
+                    "Unable to generate event draft at the moment."
+            );
+        }
 
         try {
 
             AIEventDraftResponseDTO draft =
                     objectMapper.readValue(
-                            response,
+                            aiResponse,
                             AIEventDraftResponseDTO.class
                     );
 
@@ -129,9 +110,7 @@ JSON:
                     subscription.getAiCreditsRemaining() - 1
             );
 
-            organizerSubscriptionRepository.save(
-                    subscription
-            );
+            organizerSubscriptionRepository.save(subscription);
 
             OrganizerSubscriptionResponseDTO updatedSubscription =
                     organizerActionsService.getOrganizerSubscription();
@@ -141,13 +120,18 @@ JSON:
                     .subscription(updatedSubscription)
                     .build();
 
-        } catch (Exception e) {
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+
+            log.error(
+                    "Failed to parse AI response. Response={}",
+                    aiResponse,
+                    e
+            );
 
             throw new RuntimeException(
-                    "Failed to parse AI response"
+                    "AI returned an invalid response."
             );
         }
-
     }
 
 
@@ -263,105 +247,10 @@ JSON:
             log.info("cached chat called");
             return AIIntent.GENERAL_CHAT;
         }
-        String systemPrompt = """
-You are an intent classification engine.
 
-Your ONLY job is to classify the user's request.
-
-Valid intents:
-
-- DRAFT_EVENTS
-- PUBLISHED_EVENTS
-- SUBSCRIPTION_INFO
-- REVENUE_SUMMARY
-- EVENT_ANALYTICS
-- GENERAL_CHAT
-- UNKNOWN
-
-Classification Rules:
-
-DRAFT_EVENTS:
-- list my drafts
-- show drafted events
-- show my draft events
-- list draft events
-
-PUBLISHED_EVENTS:
-- list published events
-- show my published events
-- show live events
-- list live events
-
-SUBSCRIPTION_INFO:
-- what plan am i on
-- show my subscription
-- how many ai credits do i have left
-- how many credits remain
-- show my plan
-- show ai usage
-- how many credits are remaining
-
-REVENUE_SUMMARY:
-- how much revenue have i earned
-- show my earnings
-- show my revenue
-
-EVENT_ANALYTICS:
-- show event analytics
-- show event performance
-- which event performed best
-
-GENERAL_CHAT:
-- greetings
-- casual conversation
-- asking about the assistant
-- thanking the assistant
-
-UNKNOWN:
-- anything that does not clearly match the above intents
-
-IMPORTANT:
-- Return ONLY one intent name.
-- Do not explain your answer.
-- Do not return JSON.
-- Do not return markdown.
-- If unsure, return UNKNOWN.
-
-Examples:
-
-User: list my drafted events
-DRAFT_EVENTS
-
-User: show published events
-PUBLISHED_EVENTS
-
-User: what plan am i on
-SUBSCRIPTION_INFO
-
-User: how many ai credits do i have left
-SUBSCRIPTION_INFO
-
-User: show my subscription
-SUBSCRIPTION_INFO
-
-User: how much revenue have i earned
-REVENUE_SUMMARY
-
-User: show event analytics
-EVENT_ANALYTICS
-
-User: hello
-GENERAL_CHAT
-
-User: how are you
-GENERAL_CHAT
-
-User: tell me a joke
-UNKNOWN
-""";
 
         String result = chatClient.prompt()
-                .system(systemPrompt)
+                .system(SystemPrompts.INTENT_CLASSIFIER)
                 .user(prompt)
                 .call()
                 .content();
