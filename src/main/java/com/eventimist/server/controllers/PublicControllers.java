@@ -41,19 +41,15 @@ public class PublicControllers {
 
     @GetMapping("/discover-events")
     public ResponseEntity<?> discoverEvents(
-            @RequestParam double latitude,
-            @RequestParam double longitude,
-            @RequestParam(required = false, defaultValue = "10") double radius
+            @Valid @ModelAttribute DiscoverEventsRequestDTO dto
     ) {
-        DiscoverEventsRequestDTO dto = new DiscoverEventsRequestDTO();
-        dto.setLatitude(latitude);
-        dto.setLongitude(longitude);
-        dto.setRadius(radius);
 
         return ResponseEntity.ok(
                 publicService.discoverEvents(dto)
         );
     }
+
+
     @GetMapping("/event/{slug}")
     public ResponseEntity<?> getEvents(@PathVariable String slug){
         return ResponseEntity.ok(publicService.getEvent(slug)

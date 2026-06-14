@@ -2,6 +2,7 @@ package com.eventimist.server.service.implementService;
 
 import com.eventimist.server.dto.publicDTO.DiscoverEventResponseDTO;
 import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
+import com.eventimist.server.dto.publicDTO.DiscoverEventsResponseDTO;
 import com.eventimist.server.dto.publicDTO.ViewEventResponseDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.enums.EventCategory;
@@ -22,62 +23,141 @@ public class PublicServiceImplement implements PublicService {
 
     private final EventRepository eventRepository;
 
-    @Override
-    public List<DiscoverEventResponseDTO> discoverEvents(DiscoverEventsRequestDTO dto) {
 
-        if (dto.getLatitude() == null || dto.getLongitude() == null) {
-            throw new RuntimeException("Latitude and Longitude are required");
+    @Override
+    public DiscoverEventsResponseDTO discoverEvents(
+            DiscoverEventsRequestDTO dto
+    ) {
+
+        if (dto.getLatitude() == null ||
+                dto.getLongitude() == null) {
+
+            throw new RuntimeException(
+                    "Latitude and Longitude are required"
+            );
         }
 
-        double radiusKm = dto.getRadius() != null ? dto.getRadius() : 10.0;
-        double radiusMeters = radiusKm * 1000;
+        double radiusKm =
+                dto.getRadius() != null
+                        ? dto.getRadius()
+                        : 10.0;
 
-        List<NearbyEventProjection> results = eventRepository.findNearbyEvents(
-                dto.getLatitude(),
-                dto.getLongitude(),
-                radiusMeters
-        );
+        double radiusMeters =
+                radiusKm * 1000;
 
-        return results.stream().map(row -> {
+        int page =
+                dto.getPage() != null
+                        ? dto.getPage()
+                        : 0;
 
-            DiscoverEventResponseDTO res = new DiscoverEventResponseDTO();
+        int limit =
+                dto.getLimit() != null
+                        ? dto.getLimit()
+                        : 20;
 
-            res.setId(row.getId());
-            res.setTitle(row.getTitle());
-            res.setDescription(row.getDescription());
+        int offset = page * limit;
 
-            res.setCategory(
-                    row.getCategory() != null
-                            ? EventCategory.valueOf(row.getCategory())
-                            : null
-            );
+        Long totalEvents =
+                eventRepository.countNearbyEvents(
+                        dto.getLatitude(),
+                        dto.getLongitude(),
+                        radiusMeters
+                );
 
-            res.setMode(
-                    row.getMode() != null
-                            ? EventMode.valueOf(row.getMode())
-                            : null
-            );
+        List<NearbyEventProjection> results =
+                eventRepository.findNearbyEvents(
+                        dto.getLatitude(),
+                        dto.getLongitude(),
+                        radiusMeters,
+                        limit,
+                        offset
+                );
 
-            res.setStartTime(row.getStartTime());
-            res.setTimezone(row.getTimezone());
+        List<DiscoverEventResponseDTO> events =
+                results.stream()
+                        .map(row -> {
 
+                            DiscoverEventResponseDTO res =
+                                    new DiscoverEventResponseDTO();
 
-            res.setVenue(row.getVenue());
+                            res.setId(row.getId());
+                            res.setTitle(row.getTitle());
+                            res.setDescription(
+                                    row.getDescription()
+                            );
 
-            res.setLatitude(row.getLatitude());
-            res.setLongitude(row.getLongitude());
+                            res.setCategory(
+                                    row.getCategory() != null
+                                            ? EventCategory.valueOf(
+                                            row.getCategory()
+                                    )
+                                            : null
+                            );
 
-            res.setCoverImage(row.getCoverImage());
-            res.setDistance(row.getDistance());
+                            res.setMode(
+                                    row.getMode() != null
+                                            ? EventMode.valueOf(
+                                            row.getMode()
+                                    )
+                                            : null
+                            );
 
-            res.setOrganizerName(row.getOrganizerName());
-            res.setOrganizerImage(row.getOrganizerImage());
+                            res.setStartTime(
+                                    row.getStartTime()
+                            );
 
-            res.setSlug(row.getSlug());
+                            res.setTimezone(
+                                    row.getTimezone()
+                            );
 
-            return res;
+                            res.setVenue(
+                                    row.getVenue()
+                            );
 
-        }).toList();
+                            res.setLatitude(
+                                    row.getLatitude()
+                            );
+
+                            res.setLongitude(
+                                    row.getLongitude()
+                            );
+
+                            res.setCoverImage(
+                                    row.getCoverImage()
+                            );
+
+                            res.setDistance(
+                                    row.getDistance()
+                            );
+
+                            res.setOrganizerName(
+                                    row.getOrganizerName()
+                            );
+
+                            res.setOrganizerImage(
+                                    row.getOrganizerImage()
+                            );
+
+                            res.setSlug(
+                                    row.getSlug()
+                            );
+
+                            return res;
+
+                        })
+                        .toList();
+
+        boolean hasMore =
+                ((long) (page + 1) * limit)
+                        < totalEvents;
+
+        return DiscoverEventsResponseDTO.builder()
+                .events(events)
+                .page(page)
+                .limit(limit)
+                .totalEvents(totalEvents)
+                .hasMore(hasMore)
+                .build();
     }
 
     @Override
