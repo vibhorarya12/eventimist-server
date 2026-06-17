@@ -6,8 +6,11 @@ import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftResponseDTO;
 import com.eventimist.server.dto.common.ApiResponseDTO;
 import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
+import com.eventimist.server.exceptions.BadRequestException;
 import com.eventimist.server.service.OrganizerAIService;
 import com.eventimist.server.service.PublicService;
+import com.eventimist.server.service.RateLimiterService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,24 +28,35 @@ public class PublicControllers {
     @Autowired
     private OrganizerAIService organizerAiService;
 
+    @Autowired
+    private  RateLimiterService rateLimiterService;
     @GetMapping("/health")
-    public  ResponseEntity<?>checkHealth(){
+    public ResponseEntity<?> checkHealth() {
+
+        rateLimiterService.checkRateLimit(
+                "health-test",
+                5
+        );
+
         log.info("health status ok....");
 
-        log.warn("Invalid radius received");
-
-        log.error("Error while fetching events");
-
         return ResponseEntity.ok(
-                ApiResponseDTO.success("health check... Success")
+                ApiResponseDTO.success(
+                        "health check... Success"
+                )
         );
     }
 
-
     @GetMapping("/discover-events")
-    public ResponseEntity<?> discoverEvents(
+    public ResponseEntity<?> discoverEvents(HttpServletRequest request,
             @Valid @ModelAttribute DiscoverEventsRequestDTO dto
     ) {
+        log.info("IP is : " + request.getRemoteAddr());
+        rateLimiterService.checkRateLimit(
+                "discover:" + request.getRemoteAddr(),
+                50
+        );
+
 
         return ResponseEntity.ok(
                 publicService.discoverEvents(dto)
@@ -51,23 +65,28 @@ public class PublicControllers {
 
 
     @GetMapping("/event/{slug}")
-    public ResponseEntity<?> getEvents(@PathVariable String slug){
+    public ResponseEntity<?> getEvents(HttpServletRequest request ,@PathVariable String slug){
+
+        rateLimiterService.checkRateLimit(
+                "discover:" + request.getRemoteAddr(),
+                10
+        );
         return ResponseEntity.ok(publicService.getEvent(slug)
         );
 
     }
 
 
-    @PostMapping("/generate-event-draft")
-    public ResponseEntity<GenerateEventDraftResponseDTO> generateEventDraft(
-            @Valid @RequestBody GenerateEventDraftRequestDTO requestDTO
-    ) {
-
-        GenerateEventDraftResponseDTO response =
-                organizerAiService.generateEventDraft(requestDTO);
-
-        return ResponseEntity.ok(response);
-    }
+//    @PostMapping("/generate-event-draft")
+//    public ResponseEntity<GenerateEventDraftResponseDTO> generateEventDraft(
+//            @Valid @RequestBody GenerateEventDraftRequestDTO requestDTO
+//    ) {
+//
+//        GenerateEventDraftResponseDTO response =
+//                organizerAiService.generateEventDraft(requestDTO);
+//
+//        return ResponseEntity.ok(response);
+//    }
 
 
 }
