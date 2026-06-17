@@ -2,9 +2,9 @@ package com.eventimist.server.service;
 
 public interface RateLimiterService {
 
-    boolean tryConsume(
+    void checkRateLimit(
             String key,
-            long capacity,
-            long refillTokens
+            long requestsPerMinute
     );
+
 }

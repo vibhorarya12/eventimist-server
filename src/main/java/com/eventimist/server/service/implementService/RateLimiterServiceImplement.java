@@ -1,5 +1,6 @@
 package com.eventimist.server.service.implementService;
 
+import com.eventimist.server.exceptions.BadRequestException;
 import com.eventimist.server.service.RateLimiterService;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
@@ -17,10 +18,9 @@ public class RateLimiterServiceImplement
             new ConcurrentHashMap<>();
 
     @Override
-    public boolean tryConsume(
+    public void checkRateLimit(
             String key,
-            long capacity,
-            long refillTokens
+            long requestsPerMinute
     ) {
 
         Bucket bucket =
@@ -29,9 +29,11 @@ public class RateLimiterServiceImplement
                         k -> Bucket.builder()
                                 .addLimit(
                                         Bandwidth.builder()
-                                                .capacity(capacity)
+                                                .capacity(
+                                                        requestsPerMinute
+                                                )
                                                 .refillGreedy(
-                                                        refillTokens,
+                                                        requestsPerMinute,
                                                         Duration.ofMinutes(1)
                                                 )
                                                 .build()
@@ -39,6 +41,11 @@ public class RateLimiterServiceImplement
                                 .build()
                 );
 
-        return bucket.tryConsume(1);
+        if (!bucket.tryConsume(1)) {
+
+            throw new BadRequestException(
+                    "Too many requests. Please try again later."
+            );
+        }
     }
 }
