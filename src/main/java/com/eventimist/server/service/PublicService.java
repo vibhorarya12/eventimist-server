@@ -1,9 +1,6 @@
 package com.eventimist.server.service;
 
-import com.eventimist.server.dto.publicDTO.DiscoverEventResponseDTO;
-import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
-import com.eventimist.server.dto.publicDTO.DiscoverEventsResponseDTO;
-import com.eventimist.server.dto.publicDTO.ViewEventResponseDTO;
+import com.eventimist.server.dto.publicDTO.*;
 
 import java.util.List;
 
@@ -14,6 +11,8 @@ public interface PublicService {
     public DiscoverEventsResponseDTO discoverEvents(
             DiscoverEventsRequestDTO dto
     );
-
+    DiscoverEventsResponseDTO discoverEventsByPrompt(
+            AIDiscoverEventsRequestDTO requestDTO
+    );
 
 }

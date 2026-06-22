@@ -1,9 +1,7 @@
 package com.eventimist.server.service.implementService;
 
-import com.eventimist.server.dto.publicDTO.DiscoverEventResponseDTO;
-import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
-import com.eventimist.server.dto.publicDTO.DiscoverEventsResponseDTO;
-import com.eventimist.server.dto.publicDTO.ViewEventResponseDTO;
+import com.eventimist.server.ai.SystemPrompts;
+import com.eventimist.server.dto.publicDTO.*;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.enums.EventCategory;
 import com.eventimist.server.enums.EventMode;
@@ -12,15 +10,21 @@ import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.repository.EventRepository;
 import com.eventimist.server.repository.NearbyEventProjection;
 import com.eventimist.server.service.PublicService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.ai.chat.client.ChatClient;
 
+import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PublicServiceImplement implements PublicService {
-
+    private final ChatClient chatClient;
+    private final ObjectMapper objectMapper;
     private final EventRepository eventRepository;
 
 
@@ -61,7 +65,12 @@ public class PublicServiceImplement implements PublicService {
                 eventRepository.countNearbyEvents(
                         dto.getLatitude(),
                         dto.getLongitude(),
-                        radiusMeters
+                        radiusMeters,
+                        dto.getCategory() != null
+                                ? dto.getCategory().name()
+                                : null,
+                        dto.getStartDate(),
+                        dto.getEndDate()
                 );
 
         List<NearbyEventProjection> results =
@@ -69,6 +78,11 @@ public class PublicServiceImplement implements PublicService {
                         dto.getLatitude(),
                         dto.getLongitude(),
                         radiusMeters,
+                        dto.getCategory() != null
+                                ? dto.getCategory().name()
+                                : null,
+                        dto.getStartDate(),
+                        dto.getEndDate(),
                         limit,
                         offset
                 );
@@ -229,4 +243,94 @@ public class PublicServiceImplement implements PublicService {
 
 
     }
+
+
+
+
+
+    @Override
+    public DiscoverEventsResponseDTO discoverEventsByPrompt(
+            AIDiscoverEventsRequestDTO requestDTO
+    ) {
+        String systemPrompt = SystemPrompts.EVENT_DISCOVERY_FILTER_PROMPT +
+                "\n\nToday's date is: " +
+                LocalDate.now();
+
+        String aiResponse =
+                chatClient.prompt()
+                        .system(
+                                systemPrompt
+                        )
+                        .user(
+                                requestDTO.getPrompt()
+                        )
+                        .call()
+                        .content();
+
+        try {
+
+            AIEventSearchFilterDTO filters =
+                    objectMapper.readValue(
+                            aiResponse,
+                            AIEventSearchFilterDTO.class
+                    );
+
+            log.info(
+                    "AI Filters: {}",
+                    objectMapper.writeValueAsString(filters)
+            );
+
+            DiscoverEventsRequestDTO discoverRequest =
+                    new DiscoverEventsRequestDTO();
+
+            discoverRequest.setLatitude(
+                    requestDTO.getLatitude()
+            );
+
+            discoverRequest.setLongitude(
+                    requestDTO.getLongitude()
+            );
+
+            discoverRequest.setRadius(
+                    filters.getRadius() != null
+                            ? filters.getRadius()
+                            : 10.0
+            );
+
+            discoverRequest.setCategory(
+                    filters.getCategory()
+            );
+
+            discoverRequest.setStartDate(
+                    filters.getStartDate()
+            );
+
+            discoverRequest.setEndDate(
+                    filters.getEndDate()
+            );
+
+            discoverRequest.setPage(0);
+            discoverRequest.setLimit(20);
+
+
+
+            return discoverEvents(
+                    discoverRequest
+            );
+
+        } catch (Exception e) {
+
+            log.error(
+                    "Failed to parse AI search filters. AI Response: {}",
+                    aiResponse,
+                    e
+            );
+
+            throw new RuntimeException(
+                    "Failed to parse AI search filters"
+            );
+        }
+    }
+
+
 }

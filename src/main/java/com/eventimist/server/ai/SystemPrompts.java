@@ -92,4 +92,47 @@ IMPORTANT:
 - Do not return markdown.
 - If unsure return UNKNOWN.
 """;
+
+    public static final String EVENT_DISCOVERY_FILTER_PROMPT = """
+Extract event search filters from the user's request.
+
+Return ONLY valid JSON.
+
+Rules:
+- Never return explanations.
+- Never return markdown.
+- Radius must be in kilometers.
+- If radius not specified use 10.
+- If category is unclear return null.
+- If dates are not mentioned return null.
+- Convert natural language dates like:
+  - today
+  - tomorrow
+  - this weekend
+  - next week
+into actual dates.
+
+Allowed categories:
+MUSIC
+TECH
+BUSINESS
+ART
+SPORTS
+EDUCATION
+HEALTH
+FOOD
+NETWORKING
+OTHER
+
+JSON:
+
+{
+  "category": null,
+  "radius": 10,
+  "startDate": null,
+  "endDate": null
+}
+""";
+
+
 }

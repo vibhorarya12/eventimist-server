@@ -5,6 +5,7 @@ import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftResponseDTO;
 import com.eventimist.server.dto.common.ApiResponseDTO;
+import com.eventimist.server.dto.publicDTO.AIDiscoverEventsRequestDTO;
 import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
 import com.eventimist.server.exceptions.BadRequestException;
 import com.eventimist.server.service.OrganizerAIService;
@@ -76,6 +77,20 @@ public class PublicControllers {
 
     }
 
+
+    @PostMapping("/discover-events-ai")
+    public ResponseEntity<?> discoverEventsByPrompt(
+            @Valid @RequestBody
+            AIDiscoverEventsRequestDTO requestDTO
+    ) {
+
+        return ResponseEntity.ok(
+                publicService.discoverEventsByPrompt(
+                        requestDTO
+                )
+        );
+
+    }
 
 //    @PostMapping("/generate-event-draft")
 //    public ResponseEntity<GenerateEventDraftResponseDTO> generateEventDraft(

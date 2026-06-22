@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface EventRepository extends JpaRepository<EventEntity, Long> {
@@ -57,9 +58,21 @@ AND ST_DWithin(
     )::geography,
     :distanceInMeters
 )
+AND (
+    :category IS NULL
+    OR CAST(e.category AS TEXT) = :category
+)
 
+AND (
+    CAST(:startDate AS DATE) IS NULL
+    OR DATE(e.start_time) >= CAST(:startDate AS DATE)
+)
+
+AND (
+    CAST(:endDate AS DATE) IS NULL
+    OR DATE(e.start_time) <= CAST(:endDate AS DATE)
+)
 ORDER BY distance ASC
-
 LIMIT :limit
 OFFSET :offset
 """, nativeQuery = true)
@@ -67,6 +80,13 @@ OFFSET :offset
             @Param("latitude") double latitude,
             @Param("longitude") double longitude,
             @Param("distanceInMeters") double distanceInMeters,
+
+            @Param("category") String category,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate,
+
             @Param("limit") int limit,
             @Param("offset") int offset
     );
@@ -83,10 +103,30 @@ AND ST_DWithin(
     )::geography,
     :distanceInMeters
 )
+AND (
+    :category IS NULL
+    OR CAST(e.category AS TEXT) = :category
+)
+
+AND (
+    CAST(:startDate AS DATE) IS NULL
+    OR DATE(e.start_time) >= CAST(:startDate AS DATE)
+)
+
+AND (
+    CAST(:endDate AS DATE) IS NULL
+    OR DATE(e.start_time) <= CAST(:endDate AS DATE)
+)
 """, nativeQuery = true)
     Long countNearbyEvents(
             @Param("latitude") double latitude,
             @Param("longitude") double longitude,
-            @Param("distanceInMeters") double distanceInMeters
+            @Param("distanceInMeters") double distanceInMeters,
+
+            @Param("category") String category,
+
+            @Param("startDate") LocalDate startDate,
+
+            @Param("endDate") LocalDate endDate
     );
 }
