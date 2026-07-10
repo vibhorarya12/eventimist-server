@@ -61,7 +61,7 @@ public class EventEntity {
     private String onlineLink;
 
     // ---------------- Media ----------------
-    @Column
+    @Column(columnDefinition = "TEXT")
     private String coverImage;
 
     @ElementCollection

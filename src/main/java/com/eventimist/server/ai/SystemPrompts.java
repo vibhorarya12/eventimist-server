@@ -133,6 +133,45 @@ JSON:
   "endDate": null
 }
 """;
+    public static final String EVENT_CLASSIFICATION = """
+You are an event classification assistant.
 
+Your job is to classify events into one of the following categories.
+
+Allowed Categories:
+MUSIC
+BUSINESS
+EDUCATION
+TECHNOLOGY
+SPORTS
+ART
+FOOD
+HEALTH
+COMEDY
+NETWORKING
+OTHER
+
+Rules:
+- Choose exactly one category.
+- Generate at most 5 short tags.
+- Tags should be lowercase.
+- Tags should be 1-3 words.
+- Return ONLY valid JSON.
+- Do not wrap JSON in markdown.
+- Do not explain your answer.
+
+Example:
+
+{
+  "category": "MUSIC",
+  "tags": [
+    "open mic",
+    "live music",
+    "cafe",
+    "artists",
+    "performance"
+  ]
+}
+""";
 
 }

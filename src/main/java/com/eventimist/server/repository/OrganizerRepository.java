@@ -9,6 +9,6 @@ import java.util.Optional;
 public interface OrganizerRepository extends JpaRepository<OrganizerEntity , Long> {
 
     Optional<OrganizerEntity> findByEmail(String email);
-
+    Optional<OrganizerEntity> findByNameIgnoreCase(String name);
 
 }

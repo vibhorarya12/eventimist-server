@@ -5,12 +5,13 @@ import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftResponseDTO;
 import com.eventimist.server.dto.common.ApiResponseDTO;
+import com.eventimist.server.dto.geocoding.GeocodingResponseDTO;
 import com.eventimist.server.dto.publicDTO.AIDiscoverEventsRequestDTO;
 import com.eventimist.server.dto.publicDTO.DiscoverEventsRequestDTO;
+import com.eventimist.server.dto.scrape.ScrapedEventDTO;
+import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.exceptions.BadRequestException;
-import com.eventimist.server.service.OrganizerAIService;
-import com.eventimist.server.service.PublicService;
-import com.eventimist.server.service.RateLimiterService;
+import com.eventimist.server.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,13 @@ public class PublicControllers {
 
     @Autowired
     private  RateLimiterService rateLimiterService;
+
+    @Autowired
+    private  EventScraperService eventScraperService;
+
+    @Autowired
+    private  EventImportService eventImportService;
+
     @GetMapping("/health")
     public ResponseEntity<?> checkHealth() {
 
@@ -92,16 +100,48 @@ public class PublicControllers {
 
     }
 
-//    @PostMapping("/generate-event-draft")
-//    public ResponseEntity<GenerateEventDraftResponseDTO> generateEventDraft(
-//            @Valid @RequestBody GenerateEventDraftRequestDTO requestDTO
-//    ) {
-//
-//        GenerateEventDraftResponseDTO response =
-//                organizerAiService.generateEventDraft(requestDTO);
-//
-//        return ResponseEntity.ok(response);
-//    }
+
+    @PostMapping("/scrape-event")
+    public ResponseEntity<?> scrapeEvent(
+            @RequestParam String url
+    ) {
+
+
+        return ResponseEntity.ok(
+                eventScraperService.scrape(url)
+        );
+    }
+
+    @PostMapping("/import-event")
+    public ResponseEntity<?> importEvent(
+            @RequestParam String url
+    ) {
+
+        EventEntity event =
+                eventImportService.importEvent(url);
+
+        return ResponseEntity.ok(
+                ApiResponseDTO.success(
+
+                        "Event imported successfully"
+                )
+        );
+    }
+
+
+    @Autowired
+    private GeocodingService geocodingService;
+
+    @GetMapping("/test-geocode")
+    public ResponseEntity<?> testGeocode() {
+
+        GeocodingResponseDTO dto =
+                geocodingService.geocode(
+                        "Santa Clara Convention Center, Santa Clara, CA, US"
+                );
+
+        return ResponseEntity.ok(dto);
+    }
 
 
 }
