@@ -96,7 +96,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Handle expired JWT
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"JWT token is expired!\"}");
+            response.getWriter().write("{\"error\": \"ACCESS_TOKEN_EXPIRED\"}");
         } catch (io.jsonwebtoken.SignatureException ex) {
             // Handle invalid signature
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
