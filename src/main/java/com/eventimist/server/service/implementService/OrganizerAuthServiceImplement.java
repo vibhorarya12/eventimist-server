@@ -61,7 +61,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
                 OrganizerLoginResponseDTO organizerLoginResponseDTO = new OrganizerLoginResponseDTO();
                 organizerLoginResponseDTO.setEmail(organizer.getEmail());
                 organizerLoginResponseDTO.setName(organizer.getName());
-                organizerLoginResponseDTO.setToken(jwtUtil.generateToken(organizer.getEmail(), organizer.getId() ));
+                organizerLoginResponseDTO.setToken(jwtUtil.generateAccessToken(organizer.getEmail(), organizer.getId() ));
                 organizerLoginResponseDTO.setBio(organizer.getBio());
                 organizerLoginResponseDTO.setProfilePic(organizer.getProfile_pic());
                 organizerLoginResponseDTO.setCoverImage(organizer.getCover_image());
@@ -125,7 +125,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
         organizerRegisterResponseDTO.setEmail(savedOrganizer.getEmail());
 
         organizerRegisterResponseDTO.setToken(
-                jwtUtil.generateToken(
+                jwtUtil.generateAccessToken(
                         savedOrganizer.getEmail(),
                         savedOrganizer.getId()
                 )
@@ -180,7 +180,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
         createDefaultFreeSubscription(savedOrganizer);
 
         // ─── Generate JWT Token ─────────────────────────────────────────────────
-        String token = jwtUtil.generateToken(
+        String token = jwtUtil.generateAccessToken(
                 savedOrganizer.getEmail(),
                 savedOrganizer.getId()
         );
@@ -221,7 +221,7 @@ public class OrganizerAuthServiceImplement implements OrganizerAuthService {
             OrganizerLoginResponseDTO organizerLoginResponseDTO = new OrganizerLoginResponseDTO();
             organizerLoginResponseDTO.setEmail(organizer.getEmail());
             organizerLoginResponseDTO.setName(organizer.getName());
-            organizerLoginResponseDTO.setToken(jwtUtil.generateToken(organizer.getEmail(), organizer.getId() ));
+            organizerLoginResponseDTO.setToken(jwtUtil.generateAccessToken(organizer.getEmail(), organizer.getId() ));
             organizerLoginResponseDTO.setBio(organizer.getBio());
             organizerLoginResponseDTO.setProfilePic(organizer.getProfile_pic());
             organizerLoginResponseDTO.setCoverImage(organizer.getCover_image());
