@@ -1,14 +1,16 @@
 package com.eventimist.server.controllers;
+
+import com.eventimist.server.dto.common.RefreshTokenRequestDTO;
 import com.eventimist.server.dto.organizerDTO.*;
 import com.eventimist.server.exceptions.EntityNotFoundException;
 import com.eventimist.server.service.OrganizerAuthService;
-import com.eventimist.server.utils.JwtUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Map;
 
 @Validated
@@ -19,41 +21,91 @@ public class OrganizerAuthController {
     @Autowired
     private OrganizerAuthService organizerAuthService;
 
-    @PostMapping("login")
-    public ResponseEntity<?> login(@Valid @RequestBody OrganizerLoginDTO organizerLoginDTO) {
 
-        OrganizerLoginResponseDTO organizerLoginResponseDTO = organizerAuthService.organizerLogin(organizerLoginDTO);
-        return new ResponseEntity<>(organizerLoginResponseDTO, HttpStatus.OK);
+    @PostMapping("/login")
+    public ResponseEntity<OrganizerAuthResponseDTO> login(
+            @Valid @RequestBody OrganizerLoginDTO organizerLoginDTO
+    ) {
 
+        OrganizerAuthResponseDTO response =
+                organizerAuthService.organizerLogin(
+                        organizerLoginDTO
+                );
+
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("register")
-    public ResponseEntity<?> register(@Valid @RequestBody OrganizerRegisterDTO organizerRegisterDTO) {
 
-        OrganizerRegisterResponseDTO organizerRegisterResponseDTO = organizerAuthService.registerOrganizer(organizerRegisterDTO);
+    @PostMapping("/register")
+    public ResponseEntity<OrganizerAuthResponseDTO> register(
+            @Valid @RequestBody OrganizerRegisterDTO organizerRegisterDTO
+    ) {
 
-        return new ResponseEntity<>(organizerRegisterResponseDTO, HttpStatus.OK);
+        OrganizerAuthResponseDTO response =
+                organizerAuthService.registerOrganizer(
+                        organizerRegisterDTO
+                );
 
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping ("oauthRegister")
-    public ResponseEntity<?> oAUthRegister(@Valid @RequestBody OrganizerOauthRegisterDTO oauthRegisterDTO) {
 
-        OrganizerRegisterResponseDTO organizerRegisterResponseDTO = organizerAuthService.registerWithOauth(oauthRegisterDTO);
+    @PostMapping("/oauthRegister")
+    public ResponseEntity<OrganizerAuthResponseDTO> oAUthRegister(
+            @Valid @RequestBody OrganizerOauthRegisterDTO oauthRegisterDTO
+    ) {
 
-        return new ResponseEntity<>(organizerRegisterResponseDTO, HttpStatus.OK);
+        OrganizerAuthResponseDTO response =
+                organizerAuthService.registerWithOauth(
+                        oauthRegisterDTO
+                );
 
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping ("oauthLogin")
-    public ResponseEntity<OrganizerLoginResponseDTO> oAUthLogin(@Valid @RequestBody OauthLoginRequestDTO oauthLoginRequestDTO) {
 
+    @PostMapping("/oauthLogin")
+    public ResponseEntity<OrganizerAuthResponseDTO> oAUthLogin(
+            @Valid @RequestBody OauthLoginRequestDTO oauthLoginRequestDTO
+    ) {
 
-        OrganizerLoginResponseDTO responseDTO = organizerAuthService.loginWithOauth(oauthLoginRequestDTO);
+        OrganizerAuthResponseDTO response =
+                organizerAuthService.loginWithOauth(
+                        oauthLoginRequestDTO
+                );
 
-        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
-
+        return ResponseEntity.ok(response);
     }
+
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<OrganizerAuthResponseDTO> refreshAccessToken(
+            @RequestBody RefreshTokenRequestDTO request
+    ) {
+
+        OrganizerAuthResponseDTO response =
+                organizerAuthService.refreshAccessToken(
+                        request.getRefreshToken()
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(
+            @RequestBody RefreshTokenRequestDTO request
+    ) {
+
+        organizerAuthService.revokeRefreshToken(
+                request.getRefreshToken()
+        );
+
+        return ResponseEntity.ok(
+                Map.of("message", "Logged out successfully")
+        );
+    }
+
 
     @GetMapping("/check-email")
     public ResponseEntity<Map<String, Object>> checkEmail(
@@ -62,28 +114,31 @@ public class OrganizerAuthController {
             String email
     ) {
 
-        // Call service to check email existence
-        boolean emailExists = organizerAuthService.checkEmailExists(email);
+        boolean emailExists =
+                organizerAuthService.checkEmailExists(email);
 
         if (emailExists) {
-            return ResponseEntity.ok(Map.of("message", "Email exists", "exists", true));
-        } else {
-            return ResponseEntity.ok(Map.of("message", "Email not found", "exists", false));
+            return ResponseEntity.ok(
+                    Map.of(
+                            "message", "Email exists",
+                            "exists", true
+                    )
+            );
         }
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Email not found",
+                        "exists", false
+                )
+        );
     }
 
 
     @GetMapping("/test")
-    public ResponseEntity<String> test (){
-
+    public ResponseEntity<String> test() {
 
         throw new EntityNotFoundException("not found bhai");
-
     }
-
 }
-
-
-
-
 

@@ -11,5 +11,4 @@ public class UserRegisterResponseDTO {
     private String refreshToken;
     private String profilePic;
 
-
 }
