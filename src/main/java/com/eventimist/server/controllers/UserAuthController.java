@@ -1,6 +1,7 @@
 package com.eventimist.server.controllers;
 
 
+import com.eventimist.server.dto.common.RefreshTokenRequestDTO;
 import com.eventimist.server.dto.userDTO.*;
 import com.eventimist.server.exceptions.ExistingEntityException;
 import com.eventimist.server.service.ClerkAuthService;
@@ -29,7 +30,7 @@ public class UserAuthController {
     @PostMapping("register")
     public ResponseEntity<?>register(@Valid @RequestBody UserRegisterDTO userRegisterDTO){
 
-           UserRegisterResponseDTO userRegisterResponseDTO = userAuthService.registerUser(userRegisterDTO);
+           UserAuthResponseDTO userRegisterResponseDTO = userAuthService.registerUser(userRegisterDTO);
 
             return  new ResponseEntity<>(userRegisterResponseDTO, HttpStatus.OK);
 
@@ -37,15 +38,15 @@ public class UserAuthController {
 
 
     @PostMapping("oauthRegister")
-    public ResponseEntity<UserRegisterResponseDTO> oauthRegister (@Valid @RequestBody UserOauthRegisterDTO userOauthRegisterDTO){
-         UserRegisterResponseDTO  response = userAuthService.registerWithOauth(userOauthRegisterDTO);
-        return new ResponseEntity<UserRegisterResponseDTO>(response , HttpStatus.OK);
+    public ResponseEntity<UserAuthResponseDTO> oauthRegister (@Valid @RequestBody UserOauthRegisterDTO userOauthRegisterDTO){
+         UserAuthResponseDTO  response = userAuthService.registerWithOauth(userOauthRegisterDTO);
+        return new ResponseEntity<UserAuthResponseDTO>(response , HttpStatus.OK);
     }
 
 
     @PostMapping("oauthLogin")
     public ResponseEntity<?> oauthLogin (@Valid @RequestBody UserOauthLoginDTO userOauthLoginDTO){
-                UserLoginResponseDTO userLoginResponseDTO = userAuthService.loginWithOauth(userOauthLoginDTO);
+                UserAuthResponseDTO userLoginResponseDTO = userAuthService.loginWithOauth(userOauthLoginDTO);
                 return  new ResponseEntity<>(userLoginResponseDTO, HttpStatus.OK);
     }
 
@@ -53,7 +54,7 @@ public class UserAuthController {
     @PostMapping("login")
     public  ResponseEntity<?>login(@Valid @RequestBody UserLoginDTO userLoginDTO){
 
-           UserLoginResponseDTO userLoginResponseDTO = userAuthService.loginUser(userLoginDTO);
+           UserAuthResponseDTO userLoginResponseDTO = userAuthService.loginUser(userLoginDTO);
             return  new ResponseEntity<>(userLoginResponseDTO, HttpStatus.OK);
     }
 
@@ -78,6 +79,31 @@ public class UserAuthController {
 
     }
 
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(
+            @RequestBody RefreshTokenRequestDTO request
+    ) {
 
+        return ResponseEntity.ok(
+                userAuthService.refreshAccessToken(
+                        request.getRefreshToken()
+                )
+        );
+    }
+
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(
+            @RequestBody RefreshTokenRequestDTO request
+    ) {
+
+        userAuthService.revokeRefreshToken(
+                request.getRefreshToken()
+        );
+
+        return ResponseEntity.ok(
+                "Logged out successfully"
+        );
+    }
 
 }

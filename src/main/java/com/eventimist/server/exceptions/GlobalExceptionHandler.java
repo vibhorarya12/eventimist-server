@@ -109,6 +109,15 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(RefreshAccessTokenException.class)
+    public ResponseEntity<ErrorResponse>handleRefreshAccessToken(RefreshAccessTokenException ex , WebRequest webRequest){
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        errorResponse.setMessage(ex.getMessage());
+        errorResponse.setTimestamp(new Date());
+        return new ResponseEntity<ErrorResponse>(errorResponse, HttpStatus.UNAUTHORIZED);
+
+    }
 
 
 }

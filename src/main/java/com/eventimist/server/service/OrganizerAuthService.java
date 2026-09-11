@@ -4,11 +4,28 @@ import com.eventimist.server.dto.organizerDTO.*;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface OrganizerAuthService {
-    OrganizerRegisterResponseDTO registerOrganizer (OrganizerRegisterDTO organizerRegisterDTO);
-    OrganizerLoginResponseDTO organizerLogin(OrganizerLoginDTO organizerLoginDTO);
-    OrganizerRegisterResponseDTO registerWithOauth (OrganizerOauthRegisterDTO oauthRegisterDTO);
-    OrganizerLoginResponseDTO loginWithOauth (OauthLoginRequestDTO oauthLoginRequestDTO);
+
+    OrganizerAuthResponseDTO registerOrganizer(
+            OrganizerRegisterDTO organizerRegisterDTO
+    );
+
+    OrganizerAuthResponseDTO organizerLogin(
+            OrganizerLoginDTO organizerLoginDTO
+    );
+
+    OrganizerAuthResponseDTO registerWithOauth(
+            OrganizerOauthRegisterDTO oauthRegisterDTO
+    );
+
+    OrganizerAuthResponseDTO loginWithOauth(
+            OauthLoginRequestDTO oauthLoginRequestDTO
+    );
+
     UserDetails loadByEmail(String email);
+
     boolean checkEmailExists(String email);
 
+    OrganizerAuthResponseDTO refreshAccessToken(String refreshToken);
+
+    void revokeRefreshToken(String refreshToken);
 }
