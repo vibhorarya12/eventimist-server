@@ -19,6 +19,9 @@ import org.springframework.ai.chat.client.ChatClient;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.eventimist.server.service.EventCacheService;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class PublicServiceImplement implements PublicService {
     private final ChatClient chatClient;
     private final ObjectMapper objectMapper;
     private final EventRepository eventRepository;
+    private final EventCacheService eventCacheService;
 
 
     @Override
@@ -174,10 +178,28 @@ public class PublicServiceImplement implements PublicService {
                 .build();
     }
 
-    @Override
-    public ViewEventResponseDTO getEvent(String slug){
 
-        // Extract ID from slug
+
+    @Override
+    public ViewEventResponseDTO getEvent(String slug) {
+
+        // 1. Check Redis cache
+        String cachedEvent = eventCacheService.getEvent(slug);
+
+        if (cachedEvent != null) {
+            try {
+                log.info("cache hit <<<<<<<<<<<<<<<<<<<");
+                return objectMapper.readValue(
+                        cachedEvent,
+                        ViewEventResponseDTO.class
+                );
+            } catch (JsonProcessingException e) {
+                // If cached JSON is invalid, continue with DB lookup
+            }
+        }
+
+        // 2. Extract ID from slug
+        log.warn("<<<<<<<<<<<<cache miss<<<<<<<");
         String[] parts = slug.split("-");
 
         Long eventId;
@@ -188,17 +210,18 @@ public class PublicServiceImplement implements PublicService {
             throw new BadRequestException("Invalid event slug");
         }
 
-
-        // Fetch event
+        // 3. Fetch event from PostgreSQL
         EventEntity event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+                .orElseThrow(() ->
+                        new EntityNotFoundException("Event not found")
+                );
 
-        // Optional safety check
+        // 4. Safety check
         if (!event.getSlug().equals(slug)) {
             throw new BadRequestException("Invalid event slug");
         }
 
-        // Map response
+        // 5. Map response
         ViewEventResponseDTO dto = new ViewEventResponseDTO();
 
         dto.setId(event.getId());
@@ -239,9 +262,21 @@ public class PublicServiceImplement implements PublicService {
 
         dto.setSlug(event.getSlug());
 
+        // 6. Store response in Redis
+        try {
+            String eventJson = objectMapper.writeValueAsString(dto);
+
+            eventCacheService.cacheEvent(
+                    slug,
+                    eventJson
+            );
+
+        } catch (JsonProcessingException e) {
+            // Don't fail the API just because caching failed
+        }
+
+        // 7. Return response
         return dto;
-
-
     }
 
 
