@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.concurrent.TimeUnit;
+
 @Service
 @RequiredArgsConstructor
 public class EventCacheServiceImplement implements EventCacheService {
@@ -20,7 +22,9 @@ public class EventCacheServiceImplement implements EventCacheService {
     public void cacheEvent(String slug, String eventJson) {
         redisTemplate.opsForValue().set(
                 "event:slug:" + slug,
-                eventJson
+                eventJson,
+                10,
+                TimeUnit.MINUTES
         );
     }
 }
