@@ -579,7 +579,22 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         event.setUpdatedAt(LocalDateTime.now());
 
         // 7️ Save
-        eventRepository.save(event);
+        EventEntity savedEvent = eventRepository.save(event);
+
+// 8️ Cache published event
+        ViewEventResponseDTO responseDTO = mapToViewEventResponse(savedEvent);
+
+        try {
+            String eventJson = objectMapper.writeValueAsString(responseDTO);
+
+            eventCacheService.cacheEvent(
+                    savedEvent.getSlug(),
+                    eventJson
+            );
+
+        } catch (JsonProcessingException e) {
+            // Don't fail publishing if Redis caching fails
+        }
     }
 
 
