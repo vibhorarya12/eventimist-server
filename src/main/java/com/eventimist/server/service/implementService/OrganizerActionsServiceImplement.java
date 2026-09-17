@@ -3,6 +3,7 @@ package com.eventimist.server.service.implementService;
 import com.eventimist.server.dto.ai.AIEventDraftResponseDTO;
 import com.eventimist.server.dto.ai.GenerateEventDraftRequestDTO;
 import com.eventimist.server.dto.organizerActionsDTO.*;
+import com.eventimist.server.dto.publicDTO.ViewEventResponseDTO;
 import com.eventimist.server.entities.EventEntity;
 import com.eventimist.server.entities.OrganizerEntity;
 import com.eventimist.server.entities.OrganizerSubscriptionEntity;
@@ -13,9 +14,12 @@ import com.eventimist.server.exceptions.ImageUploadException;
 import com.eventimist.server.repository.EventRepository;
 import com.eventimist.server.repository.OrganizerRepository;
 import com.eventimist.server.repository.OrganizerSubscriptionRepository;
+import com.eventimist.server.service.EventCacheService;
 import com.eventimist.server.service.OrganizerAIService;
 import com.eventimist.server.service.CloudinaryService;
 import com.eventimist.server.service.OrganizerActionsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -41,17 +45,22 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
     private final EventRepository eventRepository;
     private final OrganizerRepository organizerRepository;
     private final GeometryFactory geometryFactory = new GeometryFactory();
-
     private final CloudinaryService cloudinaryService;
+    private final ObjectMapper objectMapper;
+
+
+    private final EventCacheService eventCacheService;
 
     @Autowired
     private final OrganizerSubscriptionRepository organizerSubscriptionRepository;
     @Autowired
-    public OrganizerActionsServiceImplement(EventRepository eventRepository, OrganizerRepository organizerRepository, CloudinaryService cloudinaryService , OrganizerSubscriptionRepository organizerSubscriptionRepository) {
+    public OrganizerActionsServiceImplement(EventRepository eventRepository, OrganizerRepository organizerRepository, CloudinaryService cloudinaryService , OrganizerSubscriptionRepository organizerSubscriptionRepository , EventCacheService eventCacheService , ObjectMapper objectMapper) {
         this.eventRepository = eventRepository;
         this.organizerRepository = organizerRepository;
         this.cloudinaryService = cloudinaryService;
         this.organizerSubscriptionRepository = organizerSubscriptionRepository;
+        this.eventCacheService = eventCacheService;
+        this.objectMapper = objectMapper;
     }
 
 
@@ -264,9 +273,74 @@ public class OrganizerActionsServiceImplement implements OrganizerActionsService
         // 9️ Timestamp
         event.setUpdatedAt(LocalDateTime.now());
 
-        //  Save
-        return eventRepository.save(event);
+// 10️ Save
+        EventEntity savedEvent = eventRepository.save(event);
+
+// 11️ Update Redis cache
+        ViewEventResponseDTO responseDTO = mapToViewEventResponse(savedEvent);
+
+        try {
+            String eventJson = objectMapper.writeValueAsString(responseDTO);
+
+            eventCacheService.cacheEvent(
+                    savedEvent.getSlug(),
+                    eventJson
+            );
+
+        } catch (JsonProcessingException e) {
+            // Don't fail update if Redis serialization fails
+        }
+
+        return savedEvent;
     }
+
+
+    private ViewEventResponseDTO mapToViewEventResponse(EventEntity event) {
+
+        ViewEventResponseDTO dto = new ViewEventResponseDTO();
+
+        dto.setId(event.getId());
+        dto.setTitle(event.getTitle());
+        dto.setDescription(event.getDescription());
+
+        dto.setCategory(event.getCategory());
+
+        dto.setStartTime(event.getStartTime());
+        dto.setEndTime(event.getEndTime());
+        dto.setTimezone(event.getTimezone());
+
+        dto.setMode(event.getMode());
+        dto.setVenue(event.getVenue());
+
+        if (event.getLocation() != null) {
+            dto.setLatitude(event.getLocation().getY());
+            dto.setLongitude(event.getLocation().getX());
+        }
+
+        dto.setCoverImage(event.getCoverImage());
+        dto.setImages(event.getImages());
+
+        dto.setTags(event.getTags());
+
+        dto.setAttendance(event.getAttendance());
+        dto.setRsvpCount(event.getRsvpCount());
+
+        dto.setIsFree(event.getIsFree());
+
+        if (!event.getIsFree()) {
+            dto.setTicketPrice(event.getTicketPrice());
+        }
+
+        dto.setOrganizerId(event.getOrganizer().getId());
+        dto.setOrganizerName(event.getOrganizer().getName());
+        dto.setOrganizerImage(event.getOrganizer().getProfile_pic());
+
+        dto.setSlug(event.getSlug());
+
+        return dto;
+    }
+
+
 
 
     private void handleImages(EventEntity event, EditEventDTO dto) {
