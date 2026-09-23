@@ -23,8 +23,8 @@ public class EventCacheServiceImplement implements EventCacheService {
         redisTemplate.opsForValue().set(
                 "event:slug:" + slug,
                 eventJson,
-                10,
-                TimeUnit.MINUTES
+                2,
+                TimeUnit.DAYS
         );
     }
 }
