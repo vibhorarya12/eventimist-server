@@ -50,6 +50,7 @@ JOIN organizers o
     ON e.organizer_id = o.id
 
 WHERE e.status = 'PUBLISHED'
+AND e.end_time >= CURRENT_TIMESTAMP
 AND ST_DWithin(
     e.location,
     ST_SetSRID(
@@ -95,6 +96,7 @@ OFFSET :offset
 SELECT COUNT(*)
 FROM event e
 WHERE e.status = 'PUBLISHED'
+AND e.end_time >= CURRENT_TIMESTAMP
 AND ST_DWithin(
     e.location,
     ST_SetSRID(
