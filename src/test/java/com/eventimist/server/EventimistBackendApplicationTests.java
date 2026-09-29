@@ -1,30 +1,29 @@
 package com.eventimist.server;
 
-import com.eventimist.server.dto.ai.AIEventClassificationResponseDTO;
-import com.eventimist.server.service.AIEventClassificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 @SpringBootTest
 class EventimistBackendApplicationTests {
 
+
 	@Autowired
-	private AIEventClassificationService aiEventClassificationService;
+	private StringRedisTemplate redisTemplate;
 
 	@Test
-	void classifyEventTest() {
+	void redisConnectionTest() {
 
-		AIEventClassificationResponseDTO response =
-				aiEventClassificationService.classify(
-						"Sailors' Cafe OpenMic Mondays",
-						"Every Monday, Sailors' Cafe offers this stage to ANY ARTIST of ANY ART FORM for Free. Free to Perform. Free to Watch."
-				);
+		System.out.println("TEST STARTED");
 
-		System.out.println("--------------------------------");
-		System.out.println("Category: " + response.getCategory());
-		System.out.println("Tags: " + response.getTags());
-		System.out.println("--------------------------------");
+		redisTemplate.opsForValue().set("test-key", "Hello Redis");
+
+		String value = redisTemplate.opsForValue().get("test-key");
+
+		System.out.println("Redis value: " + value);
 	}
+
+
 
 }
