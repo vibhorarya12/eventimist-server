@@ -42,10 +42,10 @@ public class PublicControllers {
     @GetMapping("/health")
     public ResponseEntity<?> checkHealth() {
 
-        rateLimiterService.checkRateLimit(
-                "health-test",
-                5
-        );
+//        rateLimiterService.checkRateLimit(
+//                "health-test",
+//                5
+//        );
 
         log.info("health status ok....");
 
