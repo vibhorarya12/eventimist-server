@@ -66,7 +66,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Specify allowed origins
+        configuration.setAllowedOrigins(List.of("http://localhost:3000","https://eventimist.vercel.app")); // Specify allowed origins
         configuration.setAllowedMethods(List.of(HttpMethod.GET.name(),HttpMethod.PUT.name(), HttpMethod.POST.name(), HttpMethod.DELETE.name(),HttpMethod.PATCH.name()));
         configuration.setAllowedHeaders(List.of(HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION));
         configuration.setAllowCredentials(true);
