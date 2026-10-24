@@ -1,6 +1,4 @@
-
 <div align="center">
-
 <pre>
  _____                 _   _           _     _
 | ____|_   _____ _ __ | |_(_)_ __ ___ (_)___| |_
@@ -25,17 +23,20 @@
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
 
-- [📖 Project Overview](#-project-overview)
-- [✨ Key Features](#-key-features)
-- [🛠️ Tech Stack](#-tech-stack)
-- [🏗️ Architecture at a Glance](#-architecture-at-a-glance)
-- [🚀 Getting Started](#-getting-started)
-- [🌐 Deployment & API Documentation](#-deployment--api-documentation)
+<br>
+
+- [📖 Project Overview](#project-overview)
+- [✨ Key Features](#key-features)
+- [🛠️ Tech Stack](#tech-stack)
+- [🏗️ Architecture at a Glance](#architecture)
+- [🚀 Getting Started](#getting-started)
+- [🌐 Deployment & API Documentation](#deployment)
 
 </details>
 
 ---
 
+<a id="project-overview"></a>
 ## 📖 Project Overview
 
 **Eventimist Server** is the backend REST API for Eventimist, an event management platform designed to simplify event discovery and organizer workflows. Built with Java and Spring Boot, it provides secure API endpoints for event management, location-based discovery, and AI-assisted event experiences.
@@ -56,6 +57,7 @@ Explore the live application: **[https://eventimist.vercel.app/](https://eventim
   </a>
 </div>
 
+<a id="key-features"></a>
 ## ✨ Key Features
 
 - 🎟️ **Event Management** — Create, update, publish, and manage events through organizer APIs.
@@ -69,7 +71,7 @@ Explore the live application: **[https://eventimist.vercel.app/](https://eventim
 - 🐳 **Dockerized Deployment** — Package the Spring Boot application into a Docker image for deployment.
 - 📄 **API Documentation** — Explore and test REST endpoints through Swagger/OpenAPI, when enabled.
 
-
+<a id="tech-stack"></a>
 ## 🛠️ Tech Stack
 
 | Category | Technologies |
@@ -86,7 +88,7 @@ Explore the live application: **[https://eventimist.vercel.app/](https://eventim
 | **Containerization & Deployment** | Docker, Render |
 | **API Documentation** | Swagger / OpenAPI |
 
-
+<a id="architecture"></a>
 ## 🏗️ Architecture at a Glance
 
 Eventimist Server follows a layered Spring Boot architecture, separating API handling, business logic, data access, and integrations with external services.
@@ -122,14 +124,13 @@ Eventimist Server follows a layered Spring Boot architecture, separating API han
        │ PostgreSQL   │ │    Redis     │ │  RabbitMQ    │
        │ + PostGIS    │ │    Cache     │ │ Async Tasks  │
        └──────────────┘ └──────────────┘ └──────────────┘
-
                      ┌──────────────────────┐
                      │      Cloudinary      │
                      │    Media Storage     │
                      └──────────────────────┘
-
 ```
 
+<a id="getting-started"></a>
 ## 🚀 Getting Started
 
 Follow these steps to set up and run Eventimist Server locally.
@@ -184,11 +185,13 @@ Configure your database connection details in the application environment.
 Using the Maven Wrapper:
 
 **Windows**
+
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
 **macOS / Linux**
+
 ```bash
 ./mvnw spring-boot:run
 ```
@@ -207,4 +210,12 @@ Check the health endpoint:
 
 A successful response confirms that the health endpoint is reachable.
 
+<a id="deployment"></a>
+## 🌐 Deployment & API Documentation
 
+The backend is containerized with Docker and deployed on Render.
+
+- **Base URL:** `https://<your-render-service>.onrender.com`
+- **Swagger / OpenAPI:** `https://<your-render-service>.onrender.com/swagger-ui/index.html` (when enabled)
+
+Replace the placeholder URLs above with your actual deployment details.
