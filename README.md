@@ -86,3 +86,125 @@ Explore the live application: **[https://eventimist.vercel.app/](https://eventim
 | **Containerization & Deployment** | Docker, Render |
 | **API Documentation** | Swagger / OpenAPI |
 
+
+## 🏗️ Architecture at a Glance
+
+Eventimist Server follows a layered Spring Boot architecture, separating API handling, business logic, data access, and integrations with external services.
+
+```text
+                     ┌──────────────────────┐
+                     │  Eventimist Frontend │
+                     │     Next.js / Vercel │
+                     └──────────┬───────────┘
+                                │ HTTPS / REST API
+                                ▼
+                     ┌──────────────────────┐
+                     │  Spring Boot Backend │
+                     │    Java 17 / Render  │
+                     └──────────┬───────────┘
+                                │
+               ┌────────────────┼────────────────┐
+               ▼                ▼                ▼
+       ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+       │   Security   │ │  Controllers │ │  AI Services │
+       │ Spring + JWT │ │  REST APIs   │ │ Spring AI    │
+       └──────────────┘ └──────┬───────┘ └──────┬───────┘
+                               │                │
+                               ▼                ▼
+                      ┌────────────────┐ ┌────────────────┐
+                      │ Service Layer  │ │  DeepSeek API  │
+                      │ Business Logic │ └────────────────┘
+                      └───────┬────────┘
+                              │
+               ┌──────────────┼──────────────┐
+               ▼              ▼              ▼
+       ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
+       │ PostgreSQL   │ │    Redis     │ │  RabbitMQ    │
+       │ + PostGIS    │ │    Cache     │ │ Async Tasks  │
+       └──────────────┘ └──────────────┘ └──────────────┘
+
+                     ┌──────────────────────┐
+                     │      Cloudinary      │
+                     │    Media Storage     │
+                     └──────────────────────┘
+
+```
+
+## 🚀 Getting Started
+
+Follow these steps to set up and run Eventimist Server locally.
+
+### 📋 Prerequisites
+
+Ensure you have the following installed:
+
+- **Java 17** or later
+- **Maven** (or use the included Maven Wrapper)
+- **PostgreSQL** with the PostGIS extension
+- **Redis**
+- **RabbitMQ** (for asynchronous processing)
+
+You'll also need credentials for the external services you use, such as Cloudinary and the DeepSeek API.
+
+### 📥 1. Clone the Repository
+
+```bash
+git clone https://github.com/vibhorarya12/eventimist-server.git
+cd eventimist-server
+```
+
+### ⚙️ 2. Configure Environment Variables
+
+Create a `.env` file in the project root or configure the required variables in your IDE's run configuration.
+
+Add your database credentials, JWT secrets, Redis and RabbitMQ settings, and external service API keys.
+
+> Keep credentials private. Never commit your `.env` file to Git.
+
+**Note:** Spring Boot does not automatically load a `.env` file by default. Ensure your environment variables are loaded through your IDE, shell, or an appropriate configuration library.
+
+### 🗄️ 3. Configure the Database
+
+Create a PostgreSQL database and enable PostGIS:
+
+```sql
+CREATE DATABASE eventimist;
+```
+
+Connect to the `eventimist` database and run:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+```
+
+Configure your database connection details in the application environment.
+
+### ▶️ 4. Run the Application
+
+Using the Maven Wrapper:
+
+**Windows**
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+**macOS / Linux**
+```bash
+./mvnw spring-boot:run
+```
+
+Alternatively, run the application from your IDE.
+
+Once started, the backend should be available at:
+
+`http://localhost:8080`
+
+### ✅ 5. Verify the Application
+
+Check the health endpoint:
+
+[http://localhost:8080/api/public/health](http://localhost:8080/api/public/health)
+
+A successful response confirms that the health endpoint is reachable.
+
+
