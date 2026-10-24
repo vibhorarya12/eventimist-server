@@ -56,5 +56,33 @@ Explore the live application: **[https://eventimist.vercel.app/](https://eventim
   </a>
 </div>
 
+## ✨ Key Features
 
+- 🎟️ **Event Management** — Create, update, publish, and manage events through organizer APIs.
+- 🔎 **Event Discovery** — Retrieve published events through public REST APIs.
+- 📍 **Location-Based Discovery** — Find nearby events using geospatial queries powered by PostgreSQL and PostGIS.
+- 🔐 **Authentication & Authorization** — Secure user and organizer endpoints using Spring Security and JWT access and refresh tokens.
+- ⚡ **Redis Caching** — Cache event data to reduce repeated database queries and improve response times.
+- 🤖 **AI-Assisted Features** — Generate event content and support AI-powered event workflows using Spring AI.
+- 🖼️ **Media Management** — Store and manage event images using Cloudinary.
+- 📨 **Asynchronous Processing** — Use RabbitMQ for queued background tasks such as email processing.
+- 🐳 **Dockerized Deployment** — Package the Spring Boot application into a Docker image for deployment.
+- 📄 **API Documentation** — Explore and test REST endpoints through Swagger/OpenAPI, when enabled.
+
+
+## 🛠️ Tech Stack
+
+| Category | Technologies |
+|---|---|
+| **Language** | Java 17 |
+| **Framework** | Spring Boot 3.2.9 |
+| **Security & Authentication** | Spring Security, JWT |
+| **Database & Geospatial Queries** | PostgreSQL, PostGIS, Spring Data JPA, Hibernate Spatial |
+| **Caching** | Redis |
+| **AI Integration** | Spring AI, OpenAI-compatible APIs |
+| **Messaging & Background Processing** | RabbitMQ |
+| **Media Storage** | Cloudinary |
+| **Build Tool** | Maven |
+| **Containerization & Deployment** | Docker, Render |
+| **API Documentation** | Swagger / OpenAPI |
 
