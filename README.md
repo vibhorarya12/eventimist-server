@@ -22,13 +22,14 @@
 
 ---
 
+
 <details>
 <summary><strong>📑 Table of Contents</strong></summary>
 
 - [📖 Project Overview](#-project-overview)
 - [✨ Key Features](#-key-features)
-- [🛠️ Tech Stack](#-tech-stack)
-- [🏗️ Architecture at a Glance](#-architecture-at-a-glance)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [🏗️ Architecture at a Glance](#️-architecture-at-a-glance)
 - [🚀 Getting Started](#-getting-started)
 - [🌐 Deployment & API Documentation](#-deployment--api-documentation)
 
