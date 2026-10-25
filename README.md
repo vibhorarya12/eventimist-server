@@ -213,9 +213,149 @@ A successful response confirms that the health endpoint is reachable.
 <a id="deployment"></a>
 ## 🌐 Deployment & API Documentation
 
-The backend is containerized with Docker and deployed on Render.
+## 🔖 API Documentation
 
-- **Base URL:** `https://<your-render-service>.onrender.com`
-- **Swagger / OpenAPI:** `https://<your-render-service>.onrender.com/swagger-ui/index.html` (when enabled)
+### 🔐 Organizer Authentication
 
-Replace the placeholder URLs above with your actual deployment details.
+#### 1. Organizer Login
+
+Authenticates an organizer and returns their profile information along with access and refresh tokens.
+
+| Property | Details |
+|---|---|
+| **Endpoint** | `/api/auth/organizer/login` |
+| **Method** | `POST` |
+| **Content-Type** | `application/json` |
+| **Authentication** | Not required |
+
+**Request Body**
+
+```json
+{
+  "email": "organizer@example.com",
+  "password": "your-password"
+}
+```
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "bio": "Technology and community event organizer.",
+  "profilePic": "https://example.com/profile.jpg",
+  "token": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "coverImage": "https://example.com/cover.jpg",
+  "location": "Pune, India"
+}
+```
+
+**Response Fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | `String` | Organizer's name |
+| `email` | `String` | Organizer's email address |
+| `bio` | `String` | Organizer's biography |
+| `profilePic` | `String` | Profile picture URL |
+| `token` | `String` | Authentication token |
+| `refreshToken` | `String` | Token used to refresh authentication |
+| `coverImage` | `String` | Cover image URL |
+| `location` | `String` | Organizer's location |
+
+
+**Error Responses**
+
+**`404 Not Found` — Organizer Not Found**
+
+```json
+{
+  "statusCode": 404,
+  "message": "Organizer not found",
+  "timestamp": "2026-10-25T10:30:00.000+00:00"
+}
+```
+
+**`401 Unauthorized` — Invalid Credentials**
+
+```json
+{
+  "statusCode": 401,
+  "message": "Invalid credentials",
+  "timestamp": "2026-10-25T10:30:00.000+00:00"
+}
+```
+
+| Status Code | Exception | Description |
+|---|---|---|
+| `404 Not Found` | `EntityNotFoundException` | The requested organizer could not be found. |
+| `401 Unauthorized` | `WrongCredentialsException` | The supplied login credentials are incorrect. |
+
+
+---
+
+#### 2. Organizer Registration
+
+Registers a new organizer using their details and a valid Clerk session ID. Returns the organizer profile along with authentication tokens.
+
+| Property | Details |
+|---|---|
+| **Endpoint** | `/api/auth/organizer/register` |
+| **Method** | `POST` |
+| **Content-Type** | `application/json` |
+| **Authentication** | Not specified by the controller |
+
+**Request Body**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "password": "your-password",
+  "clerkSessionId": "<clerk-session-id>"
+}
+```
+
+**Request Fields**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | `String` | Yes | Organizer's name |
+| `email` | `String` | Yes | Organizer's email address |
+| `password` | `String` | Yes | Organizer's password |
+| `clerkSessionId` | `String` | Yes | Clerk session ID used during registration |
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "bio": "Technology and community event organizer.",
+  "profilePic": "https://example.com/profile.jpg",
+  "token": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "coverImage": "https://example.com/cover.jpg",
+  "location": "Pune, India"
+}
+```
+
+**Possible Error Responses**
+
+| Status Code | Exception / Condition | Description |
+|---|---|---|
+| `400 Bad Request` | Validation failure | One or more required fields are blank. |
+| `404 Not Found` | `EntityNotFoundException` | A required entity could not be found, if thrown during registration. |
+| `401 Unauthorized` | `WrongCredentialsException` | An authentication-related error occurred, if thrown during registration. |
+
+**Validation Messages**
+
+- `Name is required.`
+- `Email is required.`
+- `Password is required.`
+- `No valid clerk session id provided`
+
+
+
