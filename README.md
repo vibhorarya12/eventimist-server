@@ -579,3 +579,74 @@ Logs out an organizer by revoking the provided refresh token, preventing it from
 - Returns a success response even if the token is not found.
 
 
+## 🔐 Organizer Authentication Flow
+
+```text
+                    EVENTIMIST FRONTEND
+                       Next.js / Vercel
+                              |
+                 +------------+-------------+
+                 |                          |
+                 v                          v
+          Standard Login /             Clerk OAuth
+          Registration                     |
+                 |                          v
+                 |                   Clerk Session
+                 |                          |
+                 |                    Email + Session ID
+                 |                          |
+                 +------------+-------------+
+                              |
+                              v
+                ORGANIZER AUTH REST API
+                 /api/auth/organizer
+                              |
+                              v
+                  OrganizerAuthService
+                              |
+                 +------------+-------------+
+                 |                          |
+                 v                          v
+          Standard Auth Flow          Clerk OAuth Flow
+          Login / Register          oauthLogin / oauthRegister
+                 |                          |
+                 |                          v
+                 |                   ClerkAuthService
+                 |                          |
+                 |                          v
+                 |                 Verify Clerk Session
+                 |                          |
+                 +------------+-------------+
+                              |
+                              v
+                    Organizer Repository
+                              |
+                              v
+                         PostgreSQL
+                    Find / Create Organizer
+                              |
+                              v
+                    Generate Backend JWTs
+                    Access + Refresh Tokens
+                              |
+                              v
+                   OrganizerAuthResponseDTO
+                    Profile + Tokens
+                              |
+                              v
+                       FRONTEND CLIENT
+                              |
+                 +------------+-------------+
+                 |                          |
+                 v                          v
+          Access Token                Refresh Token
+                 |                          |
+                 v                          v
+       Protected Backend APIs       Refresh Token API
+                 |                          |
+                 v                          v
+        Spring Security JWT       Validate, Revoke Old,
+              Filter               Issue New Token Pair
+```
+
+
