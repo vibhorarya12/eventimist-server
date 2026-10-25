@@ -213,9 +213,369 @@ A successful response confirms that the health endpoint is reachable.
 <a id="deployment"></a>
 ## 🌐 Deployment & API Documentation
 
-The backend is containerized with Docker and deployed on Render.
+## 🔖 API Documentation
 
-- **Base URL:** `https://<your-render-service>.onrender.com`
-- **Swagger / OpenAPI:** `https://<your-render-service>.onrender.com/swagger-ui/index.html` (when enabled)
+### 🔐 Organizer Authentication
 
-Replace the placeholder URLs above with your actual deployment details.
+#### 1. Organizer Login
+
+Authenticates an organizer and returns their profile information along with access and refresh tokens.
+
+| Property | Details |
+|---|---|
+| **Endpoint** | `/api/auth/organizer/login` |
+| **Method** | `POST` |
+| **Content-Type** | `application/json` |
+| **Authentication** | Not required |
+
+**Request Body**
+
+```json
+{
+  "email": "organizer@example.com",
+  "password": "your-password"
+}
+```
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "bio": "Technology and community event organizer.",
+  "profilePic": "https://example.com/profile.jpg",
+  "token": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "coverImage": "https://example.com/cover.jpg",
+  "location": "Pune, India"
+}
+```
+
+**Response Fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | `String` | Organizer's name |
+| `email` | `String` | Organizer's email address |
+| `bio` | `String` | Organizer's biography |
+| `profilePic` | `String` | Profile picture URL |
+| `token` | `String` | Authentication token |
+| `refreshToken` | `String` | Token used to refresh authentication |
+| `coverImage` | `String` | Cover image URL |
+| `location` | `String` | Organizer's location |
+
+
+**Error Responses**
+
+**`404 Not Found` — Organizer Not Found**
+
+```json
+{
+  "statusCode": 404,
+  "message": "Organizer not found",
+  "timestamp": "2026-10-25T10:30:00.000+00:00"
+}
+```
+
+**`401 Unauthorized` — Invalid Credentials**
+
+```json
+{
+  "statusCode": 401,
+  "message": "Invalid credentials",
+  "timestamp": "2026-10-25T10:30:00.000+00:00"
+}
+```
+
+| Status Code | Exception | Description |
+|---|---|---|
+| `404 Not Found` | `EntityNotFoundException` | The requested organizer could not be found. |
+| `401 Unauthorized` | `WrongCredentialsException` | The supplied login credentials are incorrect. |
+
+
+---
+
+#### 2. Organizer Registration
+
+Registers a new organizer using their details and a valid Clerk session ID. Returns the organizer profile along with authentication tokens.
+
+| Property | Details |
+|---|---|
+| **Endpoint** | `/api/auth/organizer/register` |
+| **Method** | `POST` |
+| **Content-Type** | `application/json` |
+| **Authentication** | Not specified by the controller |
+
+**Request Body**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "password": "your-password",
+  "clerkSessionId": "<clerk-session-id>"
+}
+```
+
+**Request Fields**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | `String` | Yes | Organizer's name |
+| `email` | `String` | Yes | Organizer's email address |
+| `password` | `String` | Yes | Organizer's password |
+| `clerkSessionId` | `String` | Yes | Clerk session ID used during registration |
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "bio": "Technology and community event organizer.",
+  "profilePic": "https://example.com/profile.jpg",
+  "token": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "coverImage": "https://example.com/cover.jpg",
+  "location": "Pune, India"
+}
+```
+
+**Possible Error Responses**
+
+| Status Code | Exception / Condition | Description |
+|---|---|---|
+| `400 Bad Request` | Validation failure | One or more required fields are blank. |
+| `404 Not Found` | `EntityNotFoundException` | A required entity could not be found, if thrown during registration. |
+| `401 Unauthorized` | `WrongCredentialsException` | An authentication-related error occurred, if thrown during registration. |
+
+**Validation Messages**
+
+- `Name is required.`
+- `Email is required.`
+- `Password is required.`
+- `No valid clerk session id provided`
+
+
+#### 3. Organizer OAuth Login
+
+Authenticates an organizer using their email and Clerk session ID. The Clerk session is validated before the organizer is retrieved and authenticated.
+
+| Property | Details |
+|---|---|
+| **Endpoint** | `/api/auth/organizer/oauthLogin` |
+| **Method** | `POST` |
+| **Content-Type** | `application/json` |
+| **Authentication** | Valid Clerk session required |
+
+**Request Body**
+
+```json
+{
+  "email": "organizer@example.com",
+  "clerkSessionId": "<clerk-session-id>"
+}
+```
+
+**Request Fields**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `email` | `String` | Yes | Email associated with the organizer's account |
+| `clerkSessionId` | `String` | Yes | Clerk session ID validated during login |
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "bio": "Technology and community event organizer.",
+  "profilePic": "https://example.com/profile.jpg",
+  "token": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "coverImage": "https://example.com/cover.jpg",
+  "location": "Pune, India"
+}
+```
+
+**Error Responses**
+
+**`404 Not Found` — Clerk Session Authentication Failed**
+
+```json
+{
+  "statusCode": 404,
+  "message": "Clerk session authentication failed || session is inactive.",
+  "timestamp": "2026-10-25T10:30:00.000+00:00"
+}
+```
+
+**`404 Not Found` — Organizer Not Found**
+
+```json
+{
+  "statusCode": 404,
+  "message": "organizer not found , please register first !!",
+  "timestamp": "2026-10-25T10:30:00.000+00:00"
+}
+```
+
+| Status Code | Exception / Condition | Description |
+|---|---|---|
+| `400 Bad Request` | Validation failure | Email or Clerk session ID is blank. |
+| `404 Not Found` | `ClerkAuthSessionException` | Clerk session authentication failed or the session is inactive. |
+| `404 Not Found` | `EntityNotFoundException` | No organizer exists for the supplied email. |
+
+
+
+#### 4. Organizer OAuth Registration
+
+Registers a new organizer using their profile details and a valid Clerk session. The service checks for an existing account, creates the organizer, assigns a default free subscription, and returns authentication tokens.
+
+| Property | Details |
+|---|---|
+| **Endpoint** | `/api/auth/organizer/oauthRegister` |
+| **Method** | `POST` |
+| **Content-Type** | `application/json` |
+| **Authentication** | Valid Clerk session required |
+
+**Request Body**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "profilePic": "https://example.com/profile.jpg",
+  "clerkSessionId": "<clerk-session-id>"
+}
+```
+
+**Request Fields**
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | `String` | Organizer's name |
+| `email` | `String` | Organizer's email address |
+| `profilePic` | `String` | URL of the organizer's profile picture |
+| `clerkSessionId` | `String` | Clerk session ID validated during registration |
+
+> **Note:** Confirm the required fields and validation rules against `OrganizerOauthRegisterDTO`; its definition wasn't included in the provided code.
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "bio": null,
+  "profilePic": "https://example.com/profile.jpg",
+  "token": "<access-token>",
+  "refreshToken": "<refresh-token>",
+  "coverImage": null,
+  "location": null
+}
+```
+
+**Error Responses**
+
+| Status Code | Exception / Condition | Description |
+|---|---|---|
+| `400 Bad Request` | Validation failure | The request fails `@Valid` validation. |
+| `404 Not Found` | `ClerkAuthSessionException` | Clerk session authentication fails or the session is inactive. |
+| Depends on handler | `ExistingEntityException` | An organizer with the supplied email already exists. |
+
+**Example Error Response — Invalid Clerk Session**
+
+```json
+{
+  "statusCode": 404,
+  "message": "Clerk session authentication failed || session is inactive.",
+  "timestamp": "2026-10-25T10:30:00.000+00:00"
+}
+```
+
+
+#### 5. Refresh Access Token
+
+Generates a new access token and refresh token using a valid refresh token. The existing refresh token is revoked after successful validation, implementing refresh token rotation.
+
+| Property | Details |
+|---|---|
+| **Endpoint** | `/api/auth/organizer/refresh-token` |
+| **Method** | `POST` |
+| **Content-Type** | `application/json` |
+| **Authentication** | Refresh token required |
+
+**Request Body**
+
+```json
+{
+  "refreshToken": "<refresh-token>"
+}
+```
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "name": "John Doe",
+  "email": "organizer@example.com",
+  "bio": "Technology and community event organizer.",
+  "profilePic": "https://example.com/profile.jpg",
+  "token": "<new-access-token>",
+  "refreshToken": "<new-refresh-token>",
+  "coverImage": "https://example.com/cover.jpg",
+  "location": "Pune, India"
+}
+```
+
+**Response Fields**
+
+The response uses `OrganizerAuthResponseDTO` and includes the organizer's profile information, a newly generated access token, and a newly generated refresh token.
+
+**Error Responses**
+
+| Condition | Exception Message |
+|---|---|
+| Refresh token not found or invalid | `Invalid refresh token` |
+| Refresh token revoked | `Refresh token has been revoked` |
+| Refresh token expired | `Refresh token has expired` |
+
+
+
+#### 6. Organizer Logout
+
+Logs out an organizer by revoking the provided refresh token, preventing it from being used to refresh authentication tokens.
+
+| Property | Details |
+|---|---|
+| **Endpoint** | `/api/auth/organizer/logout` |
+| **Method** | `POST` |
+| **Content-Type** | `application/json` |
+| **Authentication** | Refresh token required |
+
+**Request Body**
+
+```json
+{
+  "refreshToken": "<refresh-token>"
+}
+```
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+**Behavior**
+
+- Hashes the supplied refresh token before looking it up.
+- Revokes the token if it exists.
+- Returns a success response even if the token is not found.
+
+
