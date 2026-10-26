@@ -650,3 +650,74 @@ Logs out an organizer by revoking the provided refresh token, preventing it from
 ```
 
 
+### 🔐 Organizer Actions
+
+
+### 1. Create Event
+
+Creates an event for the authenticated organizer. The event is saved with `DRAFT` status.
+
+- **Endpoint:** `POST /api/organizer/create-event`
+- **Content-Type:** `multipart/form-data`
+- **Success Status:** `201 Created`
+
+**Request Body**
+
+In Postman, select **Body → form-data**. Add the following fields as text, except `files`, which should use the File type.
+
+| Key | Example Value |
+|---|---|
+| `title` | AI & Innovation Meetup |
+| `description` | An event exploring AI and emerging technologies. |
+| `category` | TECH |
+| `startTime` | 2026-11-15T10:00:00 |
+| `endTime` | 2026-11-15T16:00:00 |
+| `timezone` | Asia/Kolkata |
+| `mode` | OFFLINE |
+| `venue` | Pune Convention Centre |
+| `onlineLink` | Leave empty for OFFLINE |
+| `latitude` | 18.5204 |
+| `longitude` | 73.8567 |
+| `tags` | AI |
+| `tags` | Technology |
+| `capacity` | 100 |
+| `ticketPrice` | 299.99 |
+| `isFree` | false |
+| `files` | Select an image file (up to 5 files) |
+
+**Success Response — `201 Created`**
+
+The controller currently returns the submitted `CreateEventDTO`, not the saved entity. Therefore, the response will resemble:
+
+```json
+{
+  "title": "AI & Innovation Meetup",
+  "description": "An event exploring AI and emerging technologies.",
+  "category": "TECH",
+  "startTime": "2026-11-15T10:00:00",
+  "endTime": "2026-11-15T16:00:00",
+  "timezone": "Asia/Kolkata",
+  "mode": "OFFLINE",
+  "venue": "Pune Convention Centre",
+  "onlineLink": null,
+  "latitude": 18.5204,
+  "longitude": 73.8567,
+  "coverImage": null,
+  "images": null,
+  "tags": [
+    "AI",
+    "Technology"
+  ],
+  "capacity": 100,
+  "ticketPrice": 299.99,
+  "isFree": false
+}
+```
+
+**Notes**
+- The `files` multipart field is not included in the JSON response because it is a separate controller parameter.
+- Although `ticketPrice` and `isFree` appear in the response, your current service implementation does not persist them.
+- The service generates image URLs from uploaded files and assigns the first uploaded image as the cover image, but those generated values won't appear in this DTO response.
+- The exact serialized response depends on your DTO and Jackson configuration.
+
+
