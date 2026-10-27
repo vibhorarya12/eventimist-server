@@ -721,3 +721,72 @@ The controller currently returns the submitted `CreateEventDTO`, not the saved e
 - The exact serialized response depends on your DTO and Jackson configuration.
 
 
+### 2. Get Organizer Events
+
+Retrieves all events belonging to the currently authenticated organizer. The organizer ID is extracted from the authenticated user's context, so it does not need to be passed as a request parameter.
+
+- **Endpoint:** `GET /api/organizer/events`
+- **Authentication:** Required
+- **Success Status:** `200 OK`
+- **Content-Type:** `application/json`
+
+**Request**
+
+No request body or query parameters are required.
+
+```http
+GET /api/organizer/events
+Authorization: Bearer <access-token>
+```
+
+**Success Response — `200 OK`**
+
+Returns a list of events belonging to the authenticated organizer.
+
+```json
+[
+  {
+    "id": 77,
+    "title": "AI & Innovation Meetup",
+    "description": "An event exploring AI and emerging technologies.",
+    "category": "TECH",
+    "startTime": "2026-11-15T10:00:00",
+    "endTime": "2026-11-15T16:00:00",
+    "timezone": "Asia/Kolkata",
+    "mode": "OFFLINE",
+    "venue": "Pune Convention Centre",
+    "onlineLink": null,
+    "latitude": 18.5204,
+    "longitude": 73.8567,
+    "coverImage": "https://example.com/event-cover.jpg",
+    "images": [
+      "https://example.com/event-cover.jpg"
+    ],
+    "tags": [
+      "AI",
+      "Technology"
+    ],
+    "capacity": 100,
+    "ticketPrice": 299.99,
+    "isFree": false,
+    "status": "DRAFT"
+  }
+]
+```
+
+*The JSON above is illustrative. The actual fields depend on `GetEventsResponseDTO` and `mapToGetEventsResponseDTO()`.*
+
+**Empty Response — `200 OK`**
+
+If the organizer has no events, the API returns an empty JSON array:
+
+```json
+[]
+```
+
+**Behavior**
+- Retrieves events using the authenticated organizer's ID.
+- Maps each `EventEntity` to `GetEventsResponseDTO`.
+- Returns an empty list when no events are found.
+- Does not accept an organizer ID from the client, helping prevent users from requesting another organizer's events by changing an ID parameter.
+
