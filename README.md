@@ -790,3 +790,73 @@ If the organizer has no events, the API returns an empty JSON array:
 - Returns an empty list when no events are found.
 - Does not accept an organizer ID from the client, helping prevent users from requesting another organizer's events by changing an ID parameter.
 
+
+### 3. Update Event
+
+Updates an existing event owned by the authenticated organizer, including event details, schedule, location, ticketing information, tags, and images.
+
+- **Endpoint:** `PUT /api/organizer/events/{id}`
+- **Authentication:** Required
+- **Content-Type:** `multipart/form-data`
+- **Success Status:** `200 OK`
+
+**Request**
+
+Pass the event ID in the URL and submit the fields using Postman → **Body → form-data**.
+
+```http
+PUT /api/organizer/events/77
+Authorization: Bearer <access-token>
+```
+
+**Request Fields**
+
+| Key | Example Value | Required |
+|---|---|---|
+| `title` | AI & Innovation Meetup — Updated | Yes |
+| `description` | An updated event description. | Yes |
+| `category` | TECH | Yes |
+| `startTime` | 2026-11-15T10:00:00 | Yes |
+| `endTime` | 2026-11-15T16:00:00 | Yes |
+| `timezone` | Asia/Kolkata | Yes |
+| `mode` | OFFLINE | Yes |
+| `venue` | Pune Convention Centre | Conditional |
+| `onlineLink` | https://example.com/meeting | Conditional |
+| `latitude` | 18.5204 | Yes |
+| `longitude` | 73.8567 | Yes |
+| `tags` | AI | No |
+| `tags` | Technology | No |
+| `capacity` | 150 | No |
+| `isFree` | false | Yes |
+| `ticketPrice` | 399.99 | No |
+| `existingImages` | https://example.com/keep.jpg | No |
+| `newImages` | Select an image file | No |
+
+**Image Handling**
+- `existingImages`: URLs of existing images to retain.
+- `newImages`: New image files to upload.
+- Use multiple `existingImages` entries to retain multiple images and attach multiple `newImages` files to upload several images.
+
+**Success Response — `200 OK`**
+
+```json
+{
+  "status": "success",
+  "message": "Event updated successfully",
+  "timestamp": "2026-10-28T12:00:00"
+}
+```
+
+**Behavior**
+- Verifies event ownership against the authenticated organizer.
+- Updates event details, schedule, location, tags, and ticketing fields.
+- Handles retained and newly uploaded images.
+- Updates the event's modification timestamp.
+- Saves the event in PostgreSQL and refreshes its Redis cache.
+
+**Notes**
+- `venue` is required for `OFFLINE` and `HYBRID` events.
+- `onlineLink` is required for `ONLINE` and `HYBRID` events.
+- `ticketPrice` should be provided when `isFree` is `false`.
+- The DTO requires all core fields, including latitude and longitude, so this endpoint currently behaves like a full update rather than a partial update.
+
