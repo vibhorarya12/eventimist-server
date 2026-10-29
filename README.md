@@ -215,7 +215,8 @@ A successful response confirms that the health endpoint is reachable.
 
 ## 🔖 API Documentation
 
-### 🔐 Organizer Authentication
+<details>
+<summary>🔐 Organizer Authentication</summary>
 
 #### 1. Organizer Login
 
@@ -648,10 +649,10 @@ Logs out an organizer by revoking the provided refresh token, preventing it from
         Spring Security JWT       Validate, Revoke Old,
               Filter               Issue New Token Pair
 ```
+</details>
 
-
-### 🔐 Organizer Actions
-
+<details>
+<summary>🎟️ Organizer Actions</summary>
 
 ### 1. Create Event
 
@@ -860,3 +861,4 @@ Authorization: Bearer <access-token>
 - `ticketPrice` should be provided when `isFree` is `false`.
 - The DTO requires all core fields, including latitude and longitude, so this endpoint currently behaves like a full update rather than a partial update.
 
+</details>
